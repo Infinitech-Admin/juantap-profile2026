@@ -93,7 +93,7 @@ export function HeroSection() {
               user={user}
               imageUrl={
                 user.profile_image
-                  ? `${process.env.NEXT_PUBLIC_IMAGE_URL}/${user.profile_image}`
+                  ? `${process.env.NEXT_PUBLIC_IMAGE_URL}/storage/${user.profile_image}`
                   : undefined
               }
             />
