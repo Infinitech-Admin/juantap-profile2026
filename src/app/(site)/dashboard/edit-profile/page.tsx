@@ -389,14 +389,13 @@ export default function EditProfilePage() {
                   <Avatar className="w-32 h-32">
                     <AvatarImage
                       src={
-                        previewURL ||
-                        (profile.profile_image
-                          ? // if backend returned a full URL use it, otherwise use storage path
-                            (profile.profile_image.startsWith("http")
-                              ? profile.profile_image
-                              : `${process.env.NEXT_PUBLIC_IMAGE_URL}/storage/${profile.profile_image}`)
-                          : "/avatar.png")
-                      }
+  previewURL ||
+  (profile.profile_image
+    ? profile.profile_image.startsWith("http")
+      ? profile.profile_image
+      : `${process.env.NEXT_PUBLIC_IMAGE_URL}/storage/avatars/${profile.profile_image}`
+    : "/avatar.png")
+}
                     />
                     <AvatarFallback className="text-lg">
                       {profile?.name?.[0] ?? ""}
