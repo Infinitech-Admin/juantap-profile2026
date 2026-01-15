@@ -246,7 +246,10 @@ export default function EditProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return; 
+      if (!token) {
+        console.error("No token found");
+        return;
+      }
 
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user`, {
@@ -258,6 +261,7 @@ export default function EditProfilePage() {
 
         if (res.ok) {
           const userData = await res.json();
+          console.log("Avatar URL from backend:", userData.avatar_url);
 
           const {
             profile,
@@ -270,20 +274,20 @@ export default function EditProfilePage() {
             firstname,
             lastname,
           } = userData;
-          const socialLinks = userData?.profile?.social_links || userData?.profile?.socialLinks || []; 
+          const socialLinks = userData?.profile?.social_links || userData?.profile?.socialLinks || [];
 
           setProfile((prev: Profile) => ({
             ...prev,
             ...profile,
             profile_image,
-            avatar_url,
+            avatar_url, // Use avatar_url directly from backend
             display_name,
             email,
             username,
             name,
             firstname,
             lastname,
-          })); 
+          }));
 
           setSocialLinks(
             socialLinks.map((link: SocialLink) => ({
@@ -293,6 +297,8 @@ export default function EditProfilePage() {
           );
 
           setCurrentUser(userData);
+        } else {
+          console.error("API returned error:", res.status);
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
