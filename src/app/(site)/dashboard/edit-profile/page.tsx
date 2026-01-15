@@ -57,6 +57,20 @@ interface User {
   lastname?: string;
 }
 
+// Helper function to get full image URL
+const getImageUrl = (path: string | null | undefined): string => {
+  if (!path) return "/avatar.png";
+  
+  // If it's already a full URL, return it
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  // If it's a relative path, prepend the IMAGE URL from env
+  const imageUrl = process.env.NEXT_PUBLIC_IMAGE_URL || 'http://localhost:8000';
+  return `${imageUrl}/${path}`;
+};
+
 export default function EditProfilePage() {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -254,7 +268,7 @@ export default function EditProfilePage() {
             firstname,
             lastname,
           } = userData;
-          const socialLinks = userData?.profile?.social_links || []; 
+          const socialLinks = userData?.profile?.social_links || userData?.profile?.socialLinks || []; 
 
           setProfile((prev: Profile) => ({
             ...prev,
@@ -387,7 +401,7 @@ export default function EditProfilePage() {
                 <div className="flex items-center gap-4">
                   <Avatar className="w-32 h-32">
                     <AvatarImage
-                      src={previewURL || profile.avatar_url || "/avatar.png"}
+                      src={previewURL || getImageUrl(profile.avatar_url || profile.profile_image)}
                       alt="Profile picture"
                     />
                     <AvatarFallback className="text-lg">
