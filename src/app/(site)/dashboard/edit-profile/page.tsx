@@ -55,6 +55,20 @@ interface User {
   lastname?: string;
 }
 
+// Helper function to get the correct image URL
+const getImageUrl = (imagePath: string | undefined): string => {
+  if (!imagePath) return "/avatar.png";
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+  
+  // Otherwise, construct the full URL using the API base URL
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://infinitech-api7.site";
+  return `${apiUrl}/storage/avatars/${imagePath}`;
+};
+
 export default function EditProfilePage() {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -161,6 +175,10 @@ export default function EditProfilePage() {
                 is_visible: !!(link.isVisible ?? link.is_visible),
               }))
             );
+            
+            // Clear the preview URL after successful save
+            setPreviewURL(null);
+            setAvatarFile(null);
           }
         } catch (e) {
           // ignore
@@ -271,7 +289,7 @@ export default function EditProfilePage() {
             }))
           );
 
-          setCurrentUser(userData); // ✅ Fix: move here inside the if block
+          setCurrentUser(userData);
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -315,7 +333,7 @@ export default function EditProfilePage() {
 
     const timeout = setTimeout(checkUsername, 500);
     return () => clearTimeout(timeout);
-  }, [profile.username, currentUser?.username]); // ✅ no need for setIsCheckingUsername
+  }, [profile.username, currentUser?.username]);
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewURL, setPreviewURL] = useState<string | null>(null);
@@ -336,9 +354,9 @@ export default function EditProfilePage() {
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
     if (!token) {
-      router.push("/login"); // redirect if no token
+      router.push("/login");
     } else {
-      setIsAuthenticated(true); // allow access if token exists
+      setIsAuthenticated(true);
       if (!user.is_admin) {
         router.push(`/dashboard/edit-profile/`);
       } else {
@@ -347,8 +365,6 @@ export default function EditProfilePage() {
     }
   }, [router]);
 
-  // ✅ ADD THIS LINE BEFORE THE RETURN
-  // Show nothing while checking auth
   if (isAuthenticated === null) return null;
   if (!profile) return <div className="p-8 text-white">Loading profile...</div>; 
 
@@ -388,22 +404,15 @@ export default function EditProfilePage() {
                 <div className="flex items-center gap-4">
                   <Avatar className="w-32 h-32">
                     <AvatarImage
-                      src={
-  previewURL ||
-  (profile.profile_image
-    ? profile.profile_image.startsWith("http")
-      ? profile.profile_image
-      : `${process.env.NEXT_PUBLIC_IMAGE_URL}/storage/avatars/${profile.profile_image}`
-    : "/avatar.png")
-}
+                      src={previewURL || getImageUrl(profile.profile_image)}
+                      alt="Profile picture"
                     />
                     <AvatarFallback className="text-lg">
-                      {profile?.name?.[0] ?? ""}
+                      {profile?.name?.[0] ?? profile?.firstname?.[0] ?? "U"}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="space-y-2">
-                    {/* Hidden file input with ref */} 
                     <input
                       type="file"
                       accept="image/png, image/jpeg"
@@ -412,14 +421,14 @@ export default function EditProfilePage() {
                         const file = e.target.files?.[0];
 
                         if (file) {
-                          const fileSizeMB = file.size / (1024 * 1024); // Convert bytes to MB
+                          const fileSizeMB = file.size / (1024 * 1024);
                           const validTypes = ["image/jpeg", "image/png"];
 
                           if (!validTypes.includes(file.type)) {
                             toast.error(
                               "Invalid file type. Only JPG and PNG are allowed."
                             );
-                            e.target.value = ""; // Clear the input
+                            e.target.value = "";
                             return;
                           }
 
@@ -427,7 +436,7 @@ export default function EditProfilePage() {
                             toast.error(
                               "File size exceeds 5MB. Please choose a smaller image."
                             );
-                            e.target.value = ""; // Clear the input
+                            e.target.value = "";
                             return;
                           }
 
@@ -512,14 +521,13 @@ export default function EditProfilePage() {
                         id="username"
                         value={profile.username || ""}
                         onChange={(e) => {
-                          // Allow only alphanumeric + underscores, limit to 8 chars
                           const value = e.target.value
                             .replace(/[^a-zA-Z0-9_]/g, "")
                             .slice(0, 10);
                           setProfile({ ...profile, username: value });
                         }}
                         placeholder="username"
-                        maxLength={15} // enforce at the DOM level
+                        maxLength={15}
                         className={
                           usernameError
                             ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -550,8 +558,6 @@ export default function EditProfilePage() {
                     placeholder="Tell people about yourself..."
                     rows={3}
                   />
-
-                  <p className="text-sm text-gray-500 mt-1"></p>
                 </div>
               </CardContent>
             </Card>
