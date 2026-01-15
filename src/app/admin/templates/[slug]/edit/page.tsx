@@ -1,67 +1,186 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { MinimalClean } from "@/components/template-previews/minimal-clean-template-edit";
+import { ArrowLeft, X, ChevronRight, ChevronLeft, Camera } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { useRouter, useParams } from "next/navigation";
+import { MinimalClean } from "@/components/template-previews/minimal-clean-template-add";
+import { toast } from "sonner";
 
-type Template = {
-  id: number;
+interface TemplateData {
+  id: string;
   slug: string;
   name: string;
   description: string;
+  description_font: string;
+  description_font_size: number;
+  description_bg: string; // MISSING - ADD THIS
+  preview_url: string;
+  thumbnail_url: string;
+  is_premium: boolean;
+  created_at: string;
+  updated_at: string;
+  category: "free" | "premium";
+  price: number;
+  original_price?: number;
+  discount?: number;
+  features: string[];
   colors: {
     primary: string;
     secondary: string;
     accent: string;
+    coverBackground: string;
+    icon: string;
+    nameBackground: string;
+    border: string;
     background: string;
-    text: string;
+    title: string;
+    description: string;
   };
   fonts: {
-    heading: string;
-    body: string;
+    title: string;
+    description: string;
   };
-  features: string[] | object;
-  tags: string[] | object;
+  title_font: string;
+  font_size: number;
+  fontSizes?: {
+    title: number;
+    description: number;
+  };
   layout: "minimal" | "modern" | "creative" | "professional" | "artistic";
-  socialStyle: "default" | "circles" | "fullblock";
-  connectStyle: "grid" | "list" | "compact";
-  is_hidden?: boolean;
+  hide_header: boolean;
+  hide_footer: boolean;
+  profile_cover: string;
+  profile_image: string;
+  profile_style: "left-all" | "centered-all" | "right-all" | "left-profile" | "right-profile"; // FIXED
+  profile_shape: "rounded" | "square" | "rectangle"; // FIXED
+  profile_border: number;
+  profile_size: number;
+  card_height: number;
+  card_width: number;
+  card_background: string;
+  social_style: "default" | "circles" | "fullblock";
+  connect_style: "grid" | "list" | "compact";
+  tags: string[];
+  is_new: boolean;
+  is_popular: boolean;
+  downloads: number;
+  is_hidden: boolean;
+}
+
+const defaultTemplate: TemplateData = {
+  id: "",
+  slug: "",
+  name: "",
+  description: "",
+  description_font: "Inter",
+  description_font_size: 14,
+  description_bg: "#f3f4f6", // ADD THIS
+  preview_url: "/placeholder.svg",
+  thumbnail_url: "/placeholder.svg",
+  is_premium: false,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  category: "free",
+  price: 0,
+  original_price: 0,
+  discount: 0,
+  features: [],
+  colors: {
+    primary: "#f3f4f6",
+    secondary: "#f3f4f6",
+    accent: "#f3f4f6",
+    coverBackground: "#f3f4f6",
+    icon: "#33425b",
+    nameBackground: "#f3f4f6",
+    border: "#f3f4f6",
+    background: "#ffffff",
+    title: "#111827",
+    description: "#6b7280",
+  },
+  fonts: { title: "Inter", description: "Inter" },
+  title_font: "Inter",
+  font_size: 22,
+  fontSizes: { title: 22, description: 12 },
+  layout: "minimal",
+  hide_header: false,
+  hide_footer: false,
+  profile_cover: "",
+  profile_image: "",
+  profile_style: "centered-all",
+  profile_shape: "rounded",
+  profile_border: 2,
+  profile_size: 120,
+  card_height: 120,
+  card_width: 300,
+  card_background: "#ffffff",
+  social_style: "default",
+  connect_style: "grid",
+  tags: [],
+  is_new: false,
+  is_popular: false,
+  downloads: 0,
+  is_hidden: false,
 };
 
 type TemplatePayload = Omit<
-  Template,
-  "features" | "colors" | "fonts" | "layout"|  "socialStyle"| "connectStyle" | "tags"
+  TemplateData,
+  | "id"
+  | "features"
+  | "colors"
+  | "fonts"
+  | "social_style"
+  | "connect_style"
+  | "card_background"
+  | "tags"
 > & {
-  id: number;
-  slug: string;
-  name: string;
-  description: string;
+  features: string;
   colors: string;
   fonts: string;
-  features: string;
-  tags: string;
   social_style: string;
   connect_style: string;
-  is_hidden?: boolean;
+  card_background: string;
+  tags: string;
 };
 
-export default function EditTemplatePage() {
-  const { slug } = useParams();
-  const router = useRouter();
+export default function AddTemplatePage() {
 
-  const [template, setTemplate] = useState<Template | null>(null);
-  const [loading, setLoading] = useState(true);
+  const params = useParams();
+  const slug = params?.slug as string | undefined;
+  const [template, setTemplate] = useState<TemplateData>(defaultTemplate);
+  const [newFeature, setNewFeature] = useState("");
+  const [newTag, setNewTag] = useState("");
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const [cardHeight, setCardHeight] = useState(180);
+  const [cardWidth, setCardWidth] = useState(512); // Default 512px (max-w-lg)
 
-  // Fetch template data
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<"Home" | "Design" | "Layout">("Home");
+  const [cardBackgroundImage, setCardBackgroundImage] = useState<string | null>(template.card_background || null);
+
+  const cardBgInputRef = useRef<HTMLInputElement>(null);
+
+  const [loading, setLoading] = useState(!!slug);
+
+  // Fetch template data if in edit mode
   useEffect(() => {
     if (!slug) return;
 
@@ -71,16 +190,44 @@ export default function EditTemplatePage() {
           `${process.env.NEXT_PUBLIC_API_URL}/templates/${slug}`
         );
 
-        // Ensure colors/fonts objects exist
-        const data = res.data as Template;
-        setTemplate({
+        const data = res.data as TemplateData;
+
+        // Parse JSON strings if needed
+        const parsedData = {
           ...data,
-          colors: data.colors || {},
-          fonts: data.fonts || {},
-        });
+          colors: typeof data.colors === 'string' ? JSON.parse(data.colors) : data.colors || {},
+          features: typeof data.features === 'string' ? JSON.parse(data.features) : data.features || [],
+          tags: typeof data.tags === 'string' ? JSON.parse(data.tags) : data.tags || [],
+
+          // FIX: Reconstruct fonts object from individual fields
+          fonts: {
+            title: data.title_font || "Inter",
+            description: data.description_font || "Inter",
+          },
+
+          // FIX: Reconstruct fontSizes object from individual fields
+          fontSizes: {
+            title: typeof data.font_size === 'string' ? parseInt(data.font_size) : data.font_size || 22,
+            description: typeof data.description_font_size === 'string' ? parseInt(data.description_font_size) : data.description_font_size || 14,
+          },
+
+          profile_border: typeof data.profile_border === 'string' ? parseInt(data.profile_border) : data.profile_border || 2,
+          profile_size: typeof data.profile_size === 'string' ? parseInt(data.profile_size) : data.profile_size || 120,
+          card_height: typeof data.card_height === 'string' ? parseInt(data.card_height) : data.card_height || 180,
+          card_width: typeof data.card_width === 'string' ? parseInt(data.card_width) : data.card_width || 512,
+        };
+
+        setTemplate(parsedData);
+        setCardHeight(parsedData.card_height);
+        setCardWidth(parsedData.card_width);
+
+        // Load Google Fonts
+        loadGoogleFont(parsedData.fonts.title);
+        loadGoogleFont(parsedData.fonts.description);
+
       } catch (err) {
-        console.error("❌ Failed to fetch template:", err);
-        alert("Failed to load template.");
+        console.error("Failed to fetch template:", err);
+        toast.error("Failed to load template.");
       } finally {
         setLoading(false);
       }
@@ -89,319 +236,1123 @@ export default function EditTemplatePage() {
     fetchTemplate();
   }, [slug]);
 
-  // Save template update
+
   const saveTemplate = async () => {
-    if (!template) return;
+    if (!template.name || !template.description) {
+      toast.error("Name and description are required!");
+      return;
+    }
     setSaving(true);
 
     try {
-      const payload: TemplatePayload = {
-        id: template.id,
+      const payload = {
         slug: template.slug,
         name: template.name,
         description: template.description,
-        is_hidden: template.is_hidden,
-        // Convert to JSON strings for Laravel
-        features: JSON.stringify(template.features),
-        colors: JSON.stringify(template.colors),
-        fonts: JSON.stringify(template.fonts),
-        social_style: JSON.stringify(template.socialStyle),
-        connect_style: JSON.stringify(template.connectStyle),
-        tags: JSON.stringify(template.tags),
+
+        // FIX: Save font data to individual fields
+        description_font: template.fonts.description || "Inter",
+        description_font_size: parseInt(String(template.fontSizes?.description || 14)),
+        description_bg: template.description_bg || "#f3f4f6",
+
+        preview_url: template.preview_url || "/placeholder.svg",
+        thumbnail_url: template.thumbnail_url || "/placeholder.svg",
+
+        is_premium: Boolean(template.is_premium),
+        is_popular: Boolean(template.is_popular),
+        is_new: Boolean(template.is_new),
+        is_hidden: Boolean(template.is_hidden),
+
+        created_at: template.created_at,
+        updated_at: new Date().toISOString(),
+
+        category: template.category,
+        price: parseFloat(String(template.price)) || 0,
+        original_price: parseFloat(String(template.original_price)) || 0,
+        discount: parseFloat(String(template.discount)) || 0,
+
+        downloads: parseInt(String(template.downloads)) || 0,
+
+        features: JSON.stringify(template.features || []),
+        colors: JSON.stringify(template.colors || {}),
+        fonts: JSON.stringify(template.fonts || {}), // Keep this for backward compatibility
+        tags: JSON.stringify(template.tags || []),
+
+        // FIX: Save to individual font fields that Laravel expects
+        title_font: template.fonts.title || "Inter",
+        font_size: parseInt(String(template.fontSizes?.title || 22)),
+
+        layout: template.layout || "minimal",
+
+        hide_header: template.hide_header,
+        hide_footer: template.hide_footer,
+
+        profile_cover: String(template.profile_cover || ""),
+        profile_image: String(template.profile_image || ""),
+        profile_style: String(template.profile_style || "centered-all"),
+        profile_shape: String(template.profile_shape || "rounded"),
+
+        profile_border: parseInt(String(template.profile_border)) || 2,
+        profile_size: parseInt(String(template.profile_size)) || 120,
+
+        card_height: parseInt(String(cardHeight)) || 180,
+        card_width: parseInt(String(cardWidth)) || 512,
+        card_background: String(template.card_background || "#ffffff"),
+
+        social_style: String(template.social_style || "default"),
+        connect_style: String(template.connect_style || "grid"),
       };
 
-      const token = localStorage.getItem("token");
+      console.log("Payload before sending:", payload);
 
-      await axios.put(
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/templates/${template.id}`,
         payload,
         {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      alert("Template updated successfully!");
+      console.log("Response:", response);
+      toast.success("Template updated successfully!");
       router.push("/admin/templates");
-    } catch (err) {
-      console.error("❌ Failed to update template:", err);
-      if (axios.isAxiosError(err)) {
-        console.error("Response data:", err.response?.data);
-        alert(
-          `Error saving template: ${err.response?.data?.message || err.message}`
-        );
+
+    } catch (err: any) {
+      console.error("Failed to update template:", err.response?.data || err);
+
+      if (err.response?.status === 422 && err.response?.data?.errors) {
+        const errors = err.response.data.errors;
+        Object.keys(errors).forEach(field => {
+          errors[field].forEach((message: string) => {
+            toast.error(`${field}: ${message}`);
+          });
+        });
       } else {
-        alert("Error saving template.");
+        toast.error(err.response?.data?.message || "Error saving template.");
       }
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <p>Loading template...</p>;
-  if (!template) return <p>Template not found</p>;
 
-  // Update color helper
-  const updateColor = (key: string, value: string) => {
-    setTemplate({
-      ...template,
-      colors: {
-        ...template.colors,
-        [key]: value,
+
+  const handleCardBgClick = () => {
+    cardBgInputRef.current?.click();
+  };
+
+  const handleCardBgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setCardBackgroundImage(result);
+        updateTemplate("card_background", result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+
+
+  const updateTemplate = <K extends keyof TemplateData>(
+    field: K,
+    value: TemplateData[K]
+  ) => {
+    setTemplate((prev) => ({
+      ...prev,
+      [field]: value,
+      updated_at: new Date().toISOString(),
+    }));
+  };
+
+  const updateColors = (colorKey: string, value: string) => {
+    setTemplate((prev) => ({
+      ...prev,
+      colors: { ...prev.colors, [colorKey]: value },
+      updated_at: new Date().toISOString(),
+    }));
+  };
+
+  const updateFonts = (fontKey: string, value: string) => {
+    // Ensure selected font is loaded (Google Fonts)
+    loadGoogleFont(value);
+
+    setTemplate((prev) => ({
+      ...prev,
+      fonts: { ...prev.fonts, [fontKey]: value },
+      updated_at: new Date().toISOString(),
+    }));
+  };
+
+  const fontOptions = [
+    "Inter",
+    "Poppins",
+    "Roboto",
+    "Playfair Display",
+    "Merriweather",
+    "Open Sans",
+    "Lato",
+    "Source Sans Pro",
+    "Nunito",
+  ];
+
+  const loadGoogleFont = (fontName: string) => {
+    if (!fontName) return;
+    // Convert to Google Fonts family param (spaces -> +)
+    const family = fontName.replace(/\s+/g, "+");
+    const href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;700&display=swap`;
+
+    // Avoid injecting duplicate links
+    if (document.querySelector(`link[data-google-font="${fontName}"]`)) return;
+
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    link.setAttribute("data-google-font", fontName);
+    document.head.appendChild(link);
+  };
+
+  const renderFontSelect = (
+    label: string,
+    fontKey: "title" | "description"
+  ) => (
+    <div>
+      <Label htmlFor={fontKey}>{label}</Label>
+      <Select
+        value={template.fonts[fontKey]}
+        onValueChange={(value) => updateFonts(fontKey, value)}
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {fontOptions.map((f) => (
+            <SelectItem key={f} value={f}>
+              {f}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const updateFontSize = (fontKey: "title" | "description", value: number) => {
+    setTemplate((prev) => ({
+      ...prev,
+      fontSizes: {
+        title: prev.fontSizes?.title ?? 22,
+        description: prev.fontSizes?.description ?? 12,
+        [fontKey]: value,
       },
-    });
+      updated_at: new Date().toISOString(),
+    }));
+  };
+
+  const renderFontSizeSelect = (
+    label: string,
+    fontKey: "title" | "description",
+    min = 12,
+    max = 48
+  ) => (
+    <div className="mb-3">
+      <Label>
+        {label}
+        <span className="text-xs text-gray-500 ml-2">
+          ({template.fontSizes?.[fontKey] || (fontKey === "title" ? 22 : 12)}px)
+        </span>
+      </Label>
+
+      <Select
+        value={(
+          template.fontSizes?.[fontKey] || (fontKey === "title" ? 22 : 12)
+        ).toString()}
+        onValueChange={(value) => updateFontSize(fontKey, Number(value))}
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {(() => {
+            const start = min % 2 === 0 ? min : min + 1;
+            const count = Math.floor((max - start) / 2) + 1;
+            return Array.from({ length: count }, (_, i) => start + i * 2).map(
+              (size) => (
+                <SelectItem key={size} value={size.toString()}>
+                  {size}px
+                </SelectItem>
+              )
+            );
+          })()}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const updateprofile_border = (value: number) => {
+    setTemplate((prev) => ({
+      ...prev,
+      profile_border: value,
+      updated_at: new Date().toISOString(),
+    }));
+  };
+
+  const renderprofile_borderSelect = (
+    label: string,
+    key: string,
+    min = 6,
+    max = 15
+  ) => (
+    <div className="mb-3">
+      <Label>
+        {label}
+        <span className="text-xs text-gray-500 ml-2">
+          ({template.profile_border ?? 2}px)
+        </span>
+      </Label>
+
+      <Select
+        value={(template.profile_border ?? 2).toString()}
+        onValueChange={(value) => updateprofile_border(Number(value))}
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(
+            (size) => (
+              <SelectItem key={size} value={size.toString()}>
+                {size}px
+              </SelectItem>
+            )
+          )}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const updateprofile_size = (value: number) => {
+    setTemplate((prev) => ({
+      ...prev,
+      profile_size: value,
+      updated_at: new Date().toISOString(),
+    }));
+  };
+
+  const renderprofile_sizeSelect = (
+    label: string,
+    key: string,
+    min = 6,
+    max = 15
+  ) => (
+    <div className="mb-3">
+      <Label>
+        {label}
+        <span className="text-xs text-gray-500 ml-2">
+          ({template.profile_size ?? 2}px)
+        </span>
+      </Label>
+
+      <Select
+        value={(template.profile_size ?? 2).toString()}
+        onValueChange={(value) => updateprofile_size(Number(value))}
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(
+            (size) => (
+              <SelectItem key={size} value={size.toString()}>
+                {size}px
+              </SelectItem>
+            )
+          )}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const addFeature = () => {
+    if (newFeature.trim()) {
+      setTemplate((prev) => ({
+        ...prev,
+        features: [...prev.features, newFeature.trim()],
+      }));
+      setNewFeature("");
+    }
+  };
+
+  const removeFeature = (index: number) => {
+    setTemplate((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addTag = () => {
+    if (newTag.trim()) {
+      setTemplate((prev) => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()],
+      }));
+      setNewTag("");
+    }
+  };
+
+  const removeTag = (index: number) => {
+    setTemplate((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((_, i) => i !== index),
+    }));
+  };
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  };
+
+  const handleNameChange = (name: string) => {
+    updateTemplate("name", name);
+    if (!template.id) {
+      const slug = generateSlug(name);
+      updateTemplate("slug", slug);
+      updateTemplate("id", slug);
+    }
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <Link href="/admin/templates">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Templates
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Edit Template</h1>
-        <p className="text-gray-600 mt-2">
-          Edit and customize a business card template
-        </p>
+    <div className="min-h-screen bg-gray-100">
+      {/* Top Navigation Bar */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/admin/templates">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            </Link>
+            <div className="border-l h-6"></div>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">
+                {template.name || "Untitled Template"}
+              </h1>
+              <p className="text-xs text-gray-500">Template Editor</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={template.is_premium ? "default" : "secondary"}>
+              {template.is_premium ? "Premium" : "Free"}
+            </Badge>
+            <Button onClick={saveTemplate} disabled={saving} size="sm">
+              {saving ? "Saving..." : "Save Template"}
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          {/* Basic Info */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Basic Info</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Slug</Label>
-                <Input
-                  value={template.slug}
-                  disabled
-                  className="bg-gray-100 cursor-not-allowed"
-                />
-              </div>
-              <div>
-                <Label>Name</Label>
-                <Input
-                  value={template.name}
-                  onChange={(e) =>
-                    setTemplate({ ...template, name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={template.description}
-                  onChange={(e) =>
-                    setTemplate({ ...template, description: e.target.value })
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
+      {/* Ribbon Toolbar */}
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-8 py-1">
+          {/* Tab Headers */}
+          <div className="flex flex-wrap sm:flex-nowrap gap-1 border-b">
+            {["Home", "Design", "Layout"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-sm font-medium ${activeTab === tab
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
 
-          {/* Visibility / Hide Template */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Design Customization</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Social Links</Label>
-                <select
-                  className="w-full border rounded p-2"
-                  value={template.socialStyle ? "default" : "circles"}
-                  onChange={(e) =>
-                    setTemplate({
-                      ...template,
-                      is_hidden: e.target.value === "1",
-                    })
-                  }
-                >
-                  <option value="default">Default</option>
-                  <option value="circles">Circles</option>
-                  <option value="fullblock">Full Block</option>
-                </select>
-              </div>
-              <div>
-                <Label>Social Links</Label>
-                <select
-                  className="w-full border rounded p-2"
-                  value={template.connectStyle ? "grid" : "list"}
-                  onChange={(e) =>
-                    setTemplate({
-                      ...template,
-                      is_hidden: e.target.value === "1",
-                    })
-                  }
-                >
-                  <option value="grid">Grid</option>
-                  <option value="list">List</option>
-                  <option value="compact">Compact</option>
-                </select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Colors */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Colors</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {["primary", "secondary", "accent", "background", "text"].map(
-                (key) => (
-                  <div key={key}>
-                    <Label className="capitalize">{key}</Label>
-                    <Input
-                      type="color"
-                      value={
-                        template.colors?.[key] ||
-                        (key === "background" ? "#ffffff" : "#000000")
+          {/* Tab Content */}
+          <div className="py-2 flex flex-wrap items-center gap-2 sm:gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            {activeTab === "Home" && (
+              <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
+                {/* Title Section */}
+                <div className="flex flex-col gap-1 min-w-[180px] flex-shrink-0">
+                  <span className="text-sm mt-1 font-semibold">Style</span>
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                    <Select
+                      value={template.fonts.title}
+                      onValueChange={(value) => updateFonts("title", value)}
+                    >
+                      <SelectTrigger className="h-8 w-full text-xs">
+                        <SelectValue placeholder="Title Font" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fontOptions.map((f) => (
+                          <SelectItem key={f} value={f}>
+                            {f}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={(template.fontSizes?.title || 22).toString()}
+                      onValueChange={(value) =>
+                        updateFontSize("title", Number(value))
                       }
-                      onChange={(e) => updateColor(key, e.target.value)}
-                    />
+                    >
+                      <SelectTrigger className="h-8 w-full text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[12, 14, 16, 18, 20, 22, 24, 26, 28, 30].map((size) => (
+                          <SelectItem key={size} value={size.toString()}>
+                            {size}px
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                )
-              )}
-            </CardContent>
-          </Card>
+                  <h1 className="text-xs text-gray-500 font-medium">Title</h1>
+                </div>
 
-          {/* Pricing Info */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Pricing</CardTitle>
-            </CardHeader>
-
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Premium Toggle */}
-              <div className="md:col-span-2">
-                <Label>Premium?</Label>
-                <select
-                  className="border rounded p-2 w-full"
-                  value={template.is_premium ? "1" : "0"}
-                  onChange={(e) =>
-                    setTemplate({
-                      ...template,
-                      is_premium: e.target.value === "1",
-                    })
-                  }
-                >
-                  <option value="0">No</option>
-                  <option value="1">Yes</option>
-                </select>
+                {/* Description Section */}
+                <div className="flex flex-col mt-7 gap-1 min-w-[180px] flex-shrink-0">
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                    <Select
+                      value={template.fonts.description}
+                      onValueChange={(value) => updateFonts("description", value)}
+                    >
+                      <SelectTrigger className="h-8 w-full text-xs">
+                        <SelectValue placeholder="Desc Font" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fontOptions.map((f) => (
+                          <SelectItem key={f} value={f}>
+                            {f}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={(template.fontSizes?.description || 12).toString()}
+                      onValueChange={(value) =>
+                        updateFontSize("description", Number(value))
+                      }
+                    >
+                      <SelectTrigger className="h-8 w-full text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[12, 14, 16, 18, 20, 22, 24, 26, 28, 30].map((size) => (
+                          <SelectItem key={size} value={size.toString()}>
+                            {size}px
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <h1 className="text-xs text-gray-500 font-medium">Description</h1>
+                </div>
               </div>
+            )}
 
-              {/* Show pricing fields ONLY if Premium */}
-              {template.is_premium && (
-                <>
-                  <div>
-                    <Label>Price (auto-calculated)</Label>
-                    <Input
-                      type="number"
-                      value={template.price || ""}
-                      disabled
-                      className="bg-gray-100 cursor-not-allowed"
+            {activeTab === "Design" && (
+              <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
+                {/* Image Shape */}
+                <div className="flex flex-col gap-1 min-w-[180px] flex-shrink-0">
+                  <span className="text-sm mt-1 font-semibold">Image Shape</span>
+                  <Select
+                    value={template.profile_shape}
+                    onValueChange={(value) =>
+                      updateTemplate("profile_shape", value as any)
+                    }
+                  >
+                    <SelectTrigger className="h-8 w-full text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="rounded">Rounded</SelectItem>
+                      <SelectItem value="square">2x2</SelectItem>
+                      <SelectItem value="rectangle">Passport</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <h1 className="text-xs text-gray-500 font-medium">Image Shape</h1>
+                </div>
+
+                {/* Card Background Upload */}
+                <div className="flex flex-col gap-1 min-w-[180px] flex-shrink-0">
+                  <span className="text-sm mt-1 font-semibold">Card Background</span>
+                  <label
+                    className="cursor-pointer flex items-center gap-2 px-3 py-2 border rounded hover:bg-gray-100"
+                    onClick={handleCardBgClick}
+                  >
+                    <Camera size={16} className="text-gray-500" />
+                    <span className="text-xs text-gray-600">Upload Background</span>
+                  </label>
+
+                  {cardBackgroundImage && (
+                    <img
+                      src={cardBackgroundImage}
+                      // alt="Card Background Preview"
+                      className="mt-2 h-0 w-full object-cover rounded"
                     />
-                  </div>
-                  <div>
-                    <Label>Original Price</Label>
-                    <Input
-                      type="number"
-                      value={template.original_price || ""}
-                      onChange={(e) => {
-                        const original = Number(e.target.value) || 0;
-                        const discount = Number(template.discount) || 0;
-                        const calculated =
-                          original - (original * discount) / 100;
+                  )}
 
-                        setTemplate({
-                          ...template,
-                          original_price: original,
-                          price: calculated,
-                        });
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Label>Discount (%)</Label>
-                    <Input
-                      type="number"
-                      value={template.discount || ""}
-                      onChange={(e) => {
-                        const discount = Number(e.target.value) || 0;
-                        const original = Number(template.original_price) || 0;
-                        const calculated =
-                          original - (original * discount) / 100;
+                  <input
+                    ref={cardBgInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCardBgChange}
+                    className="hidden"
+                  />
+                </div>
 
-                        setTemplate({
-                          ...template,
-                          discount,
-                          price: calculated,
-                        });
-                      }}
-                    />
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Visibility / Hide Template */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Visibility</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <Label>Hide this template?</Label>
-                <select
-                  className="border rounded p-2 w-full"
-                  value={template.is_hidden ? "1" : "0"}
-                  onChange={(e) =>
-                    setTemplate({
-                      ...template,
-                      is_hidden: e.target.value === "1",
-                    })
-                  }
-                >
-                  <option value="0">No (Visible)</option>
-                  <option value="1">Yes (Hidden)</option>
-                </select>
               </div>
-            </CardContent>
-          </Card>
+            )}
 
-          {/* Save Button */}
-          <Button onClick={saveTemplate} disabled={saving} className="mt-6">
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
 
-        <div className="space-y-6">
-          {/* Live Preview */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Live Preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MinimalClean
-                social_style={template.socialStyle}
-                connect_style={template.connectStyle}
-                colors={template.colors}
-                fonts={template.fonts}
-              />
-            </CardContent>
-          </Card>
+            {activeTab === "Layout" && (
+              <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
+                {/* Wrap Profile */}
+                <div className="flex flex-col min-w-[180px] flex-shrink-0">
+                  <span className="text-sm mt-1 font-semibold">Wrap Profile</span>
+                  <Select
+                    value={template.profile_style}
+                    onValueChange={(value) =>
+                      updateTemplate("profile_style", value as any)
+                    }
+                  >
+                    <SelectTrigger className="h-8 w-full text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left-all">Left All</SelectItem>
+                      <SelectItem value="centered-all">Centered All</SelectItem>
+                      <SelectItem value="right-all">Right All</SelectItem>
+                      <SelectItem value="left-profile">Left Profile</SelectItem>
+                      <SelectItem value="right-profile">Right Profile</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <h1 className="text-xs text-gray-500 font-medium">Wrap Profile</h1>
+                </div>
+
+                {/* Wrap Links */}
+                <div className="flex flex-col min-w-[180px] flex-shrink-0">
+                  <span className="text-sm mt-1 font-semibold">Wrap Links</span>
+                  <div className="flex flex-row gap-2">
+                    <Select
+                      value={template.social_style}
+                      onValueChange={(value) =>
+                        updateTemplate("social_style", value as any)
+                      }
+                    >
+                      <SelectTrigger className="h-8 w-full text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="default">Default</SelectItem>
+                        <SelectItem value="circles">Circles</SelectItem>
+                        <SelectItem value="fullblock">Full Block</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={template.connect_style}
+                      onValueChange={(value) =>
+                        updateTemplate("connect_style", value as any)
+                      }
+                    >
+                      <SelectTrigger className="h-8 w-full text-xs flex-1 min-w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="grid">Grid</SelectItem>
+                        <SelectItem value="list">List</SelectItem>
+                        <SelectItem value="compact">Compact</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                  </div>
+                  <h1 className="text-xs text-gray-500 font-medium">Wrap Links</h1>
+                </div>
+              </div>
+            )}
+
+
+
+          </div>
         </div>
       </div>
-    </div>
+
+
+
+      {/* Main Content Area */}
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Sidebar - Properties Panel */}
+          <div className="lg:col-span-1 space-y-4 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
+            {/* Basic Information */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold">
+                  Basic Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label className="text-xs">Template Name</Label>
+                  <Input
+                    value={template.name}
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    placeholder="e.g., Minimal Clean"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="mb-1" htmlFor="slug">
+                    Slug (auto-generated)
+                  </Label>
+                  <Input
+                    id="slug"
+                    value={template.slug}
+                    onChange={(e) => updateTemplate("slug", e.target.value)}
+                    placeholder="minimal-clean"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Description</Label>
+                  <Textarea
+                    value={template.description}
+                    onChange={(e) =>
+                      updateTemplate("description", e.target.value)
+                    }
+                    placeholder="Template description..."
+                    className="text-sm min-h-[60px]"
+                  />
+                </div>
+
+                {/* Category, Layout, Checkboxes Row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Category</Label>
+                    <Select
+                      value={template.category}
+                      onValueChange={(value) => {
+                        updateTemplate("category", value as "free" | "premium");
+                        updateTemplate("is_premium", value === "premium");
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="premium">Premium</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Layout</Label>
+                    <Select
+                      value={template.layout}
+                      onValueChange={(value) =>
+                        updateTemplate("layout", value as any)
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="minimal">Minimal</SelectItem>
+                        <SelectItem value="modern">Modern</SelectItem>
+                        <SelectItem value="creative">Creative</SelectItem>
+                        <SelectItem value="professional">
+                          Professional
+                        </SelectItem>
+                        <SelectItem value="artistic">Artistic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Premium Pricing */}
+                {template.category === "premium" && (
+                  <div className="pt-3 border-t">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-xs">Price (auto)</Label>
+                        <Input
+                          type="number"
+                          value={template.price}
+                          disabled
+                          className="h-8 text-xs bg-gray-50"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Original</Label>
+                        <Input
+                          type="number"
+                          value={template.original_price || ""}
+                          onChange={(e) => {
+                            const original = Number(e.target.value) || 0;
+                            updateTemplate("original_price", original);
+                            const calculated =
+                              original -
+                              (original * (template.discount || 0)) / 100;
+                            updateTemplate("price", calculated);
+                          }}
+                          placeholder="399"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Discount %</Label>
+                        <Input
+                          type="number"
+                          value={template.discount || ""}
+                          onChange={(e) => {
+                            const discount = Number(e.target.value) || 0;
+                            updateTemplate("discount", discount);
+                            const calculated =
+                              (template.original_price || 0) -
+                              ((template.original_price || 0) * discount) / 100;
+                            updateTemplate("price", calculated);
+                          }}
+                          placeholder="0"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-4 mt-5">
+                  {/* Basic Info Section */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="is_popular"
+                        checked={template.is_popular}
+                        onCheckedChange={(checked) =>
+                          updateTemplate("is_popular", Boolean(checked))
+                        }
+                      />
+                      <Label htmlFor="is_popular" className="text-xs">
+                        Mark as Popular
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="is_new"
+                        checked={template.is_new}
+                        onCheckedChange={(checked) =>
+                          updateTemplate("is_new", Boolean(checked))
+                        }
+                      />
+                      <Label htmlFor="is_new" className="text-xs">
+                        Mark as New
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Color Palette */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold">Colors</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs mb-1 block">Primary Color</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="color"
+                        value={template.colors.coverBackground}
+                        onChange={(e) =>
+                          updateColors("coverBackground", e.target.value)
+                        }
+                        className="w-10 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={template.colors.coverBackground}
+                        onChange={(e) =>
+                          updateColors("coverBackground", e.target.value)
+                        }
+                        className="h-8 text-xs flex-1"
+                        placeholder="#bc8f8f"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs mb-1 block">
+                      Secondary Color
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="color"
+                        value={template.colors.accent}
+                        onChange={(e) => updateColors("accent", e.target.value)}
+                        className="w-10 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={template.colors.accent}
+                        onChange={(e) => updateColors("accent", e.target.value)}
+                        className="h-8 text-xs flex-1"
+                        placeholder="#993838"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs mb-1 block">
+                      Background Color
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="color"
+                        value={template.colors.background}
+                        onChange={(e) =>
+                          updateColors("background", e.target.value)
+                        }
+                        className="w-10 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={template.colors.background}
+                        onChange={(e) =>
+                          updateColors("background", e.target.value)
+                        }
+                        className="h-8 text-xs flex-1"
+                        placeholder="#a59c9c"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs mb-1 block">Name Background</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="color"
+                        value={template.colors.nameBackground}
+                        onChange={(e) => updateColors("nameBackground", e.target.value)}
+                        className="w-10 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={template.colors.nameBackground}
+                        onChange={(e) => updateColors("nameBackground", e.target.value)}
+                        className="h-8 text-xs flex-1"
+                        placeholder="#c1f1f1"
+                      />
+                    </div>
+                  </div>
+
+
+
+                  <div>
+                    <Label className="text-xs mb-1 block">
+                      Border Color
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="color"
+                        value={template.colors.border}
+                        onChange={(e) =>
+                          updateColors("border", e.target.value)
+                        }
+                        className="w-10 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={template.colors.border}
+                        onChange={(e) =>
+                          updateColors("border", e.target.value)
+                        }
+                        className="h-8 text-xs flex-1"
+                        placeholder="#244ac6"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs mb-1 block">Icon Color</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="color"
+                        value={template.colors.icon}
+                        onChange={(e) => updateColors("icon", e.target.value)}
+                        className="w-10 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={template.colors.icon}
+                        onChange={(e) => updateColors("icon", e.target.value)}
+                        className="h-8 text-xs flex-1"
+                        placeholder="#a72f2f"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs mb-1 block">Title Color</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="color"
+                        value={template.colors.title}
+                        onChange={(e) => updateColors("title", e.target.value)}
+                        className="w-10 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={template.colors.title}
+                        onChange={(e) => updateColors("title", e.target.value)}
+                        className="h-8 text-xs flex-1"
+                        placeholder="#c1f1f1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs mb-1 block">
+                      Description Color
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="color"
+                        value={template.colors.description}
+                        onChange={(e) =>
+                          updateColors("description", e.target.value)
+                        }
+                        className="w-10 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={template.colors.description}
+                        onChange={(e) =>
+                          updateColors("description", e.target.value)
+                        }
+                        className="h-8 text-xs flex-1"
+                        placeholder="#c62424"
+                      />
+                    </div>
+                  </div>
+
+
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Advanced Styling */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold">
+                  Advanced Styling
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label className="text-xs">
+                    Profile Border ({template.profile_border ?? 2}px)
+                  </Label>
+                  <Input
+                    type="range"
+                    min="0"
+                    max="8"
+                    value={template.profile_border ?? 2}
+                    onChange={(e) =>
+                      updateprofile_border(Number(e.target.value))
+                    }
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">
+                    Profile Size ({template.profile_size ?? 120}px)
+                  </Label>
+                  <Input
+                    type="range"
+                    min="120"
+                    max="250"
+                    value={template.profile_size ?? 120}
+                    onChange={(e) => updateprofile_size(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">
+                    Card Height ({cardHeight}px)
+                  </Label>
+                  <Input
+                    type="range"
+                    min="50"
+                    max="300"
+                    value={cardHeight}
+                    onChange={(e) => setCardHeight(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Card Width ({cardWidth}px)</Label>
+                  <Input
+                    type="range"
+                    min="320"
+                    max="768"
+                    value={cardWidth}
+                    onChange={(e) => setCardWidth(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right - Preview Area */}
+          <div className="lg:col-span-2">
+            <Card className="sticky top-6">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-semibold">
+                    Live Preview
+                  </CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    {cardWidth} × {cardHeight}px
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-50 p-8 rounded-lg flex items-center justify-center min-h-[600px]">
+                  <MinimalClean
+                    social_style={template.social_style}
+                    connect_style={template.connect_style}
+                    profile_style={template.profile_style}
+                    profile_shape={template.profile_shape}
+                    colors={template.colors}
+                    fonts={template.fonts}
+                    fontSizes={template.fontSizes}
+                    profileBorder={template.profile_border}
+                    profileSize={template.profile_size}
+                    cardHeight={cardHeight}
+                    cardWidth={cardWidth}
+                    description_bg={template.description_bg}
+                    card_background={cardBackgroundImage || template.card_background}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div >
   );
 }
