@@ -404,7 +404,7 @@ export default function EditProfilePage() {
                   </Avatar>
 
                   <div className="space-y-2">
-                    {/* ✅ Hidden file input with ref */} 
+                    {/* Hidden file input with ref */} 
                     <input
                       type="file"
                       accept="image/png, image/jpeg"
