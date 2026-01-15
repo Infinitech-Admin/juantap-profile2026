@@ -34,6 +34,7 @@ interface Profile {
   website?: string;
   location?: string;
   profile_image?: string;
+  avatar_url?: string;
 }
 
 interface SocialLink {
@@ -47,6 +48,7 @@ interface SocialLink {
 interface User {
   profile: Profile;
   profile_image?: string;
+  avatar_url?: string;
   email: string;
   display_name?: string;
   username?: string;
@@ -54,20 +56,6 @@ interface User {
   firstname?: string;
   lastname?: string;
 }
-
-// Helper function to get the correct image URL
-const getImageUrl = (imagePath: string | undefined): string => {
-  if (!imagePath) return "/avatar.png";
-  
-  // If it's already a full URL, return as is
-  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-    return imagePath;
-  }
-  
-  // Otherwise, construct the full URL using the API base URL
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://infinitech-api7.site";
-  return `${apiUrl}/storage/avatars/${imagePath}`;
-};
 
 export default function EditProfilePage() {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -140,7 +128,7 @@ export default function EditProfilePage() {
       });
 
       if (res.ok) {
-        // Refresh user data after successful save so we get updated avatar and profile
+        // Refresh user data after successful save
         try {
           const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user`, {
             headers: {
@@ -158,6 +146,7 @@ export default function EditProfilePage() {
               ...prev,
               ...userData.profile,
               profile_image: userData.profile_image || prev.profile_image,
+              avatar_url: userData.avatar_url || prev.avatar_url,
               display_name: userData.display_name ?? prev.display_name,
               email: userData.email ?? prev.email,
               username: userData.username ?? prev.username,
@@ -181,7 +170,7 @@ export default function EditProfilePage() {
             setAvatarFile(null);
           }
         } catch (e) {
-          // ignore
+          console.error("Failed to refresh user data", e);
         }
 
         toast.success("Profile saved!");
@@ -197,7 +186,6 @@ export default function EditProfilePage() {
         if (err?.errors?.username) {
           toast.error("Username is already taken. Please choose another.");
         } else {
-          // Safely extract the first validation message
           const values = Object.values(err?.errors || {});
           let firstError: string | undefined;
 
@@ -213,7 +201,6 @@ export default function EditProfilePage() {
           toast.error(firstError || "Validation error. Please check your input.");
         }
       } else {
-        // Attempt to parse JSON, fall back to text
         let body: any = null;
         try {
           body = await res.json();
@@ -226,9 +213,7 @@ export default function EditProfilePage() {
         }
 
         console.error("Profile save failed", { status: res.status, body });
-        toast.error(`Error saving profile: ${res.status} ${
-          body && typeof body === "string" ? body : JSON.stringify(body)
-        }`);
+        toast.error(`Error saving profile: ${res.status}`);
       }
     } catch (err) {
       console.error("Failed to save profile", err);
@@ -238,7 +223,7 @@ export default function EditProfilePage() {
         toast.error("Failed to save profile. Check console for details.");
       }
     } finally {
-      setIsSaving(false); // stop loading
+      setIsSaving(false);
     }
   };
 
@@ -261,6 +246,7 @@ export default function EditProfilePage() {
           const {
             profile,
             profile_image,
+            avatar_url,
             email,
             display_name,
             username,
@@ -274,6 +260,7 @@ export default function EditProfilePage() {
             ...prev,
             ...profile,
             profile_image,
+            avatar_url,
             display_name,
             email,
             username,
@@ -348,8 +335,6 @@ export default function EditProfilePage() {
     }
     const user = JSON.parse(userData);
 
-    console.log("user admin ", user.is_admin);
-
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -372,7 +357,6 @@ export default function EditProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header */} 
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
               <Link href="/">
@@ -392,7 +376,6 @@ export default function EditProfilePage() {
           </div>
 
           <div className="space-y-8">
-            {/* Profile Picture */} 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -404,11 +387,11 @@ export default function EditProfilePage() {
                 <div className="flex items-center gap-4">
                   <Avatar className="w-32 h-32">
                     <AvatarImage
-                      src={previewURL || getImageUrl(profile.profile_image)}
+                      src={previewURL || profile.avatar_url || "/avatar.png"}
                       alt="Profile picture"
                     />
                     <AvatarFallback className="text-lg">
-                      {profile?.name?.[0] ?? profile?.firstname?.[0] ?? "U"}
+                      {profile?.name?.[0] || profile?.firstname?.[0] || "U"}
                     </AvatarFallback>
                   </Avatar>
 
@@ -463,7 +446,6 @@ export default function EditProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Basic Information */} 
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
@@ -562,7 +544,6 @@ export default function EditProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Contact Information */} 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -647,7 +628,6 @@ export default function EditProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Social Links */} 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -738,7 +718,6 @@ export default function EditProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Save Button */} 
             <div className="flex justify-end">
               <Button
                 onClick={handleSave}
