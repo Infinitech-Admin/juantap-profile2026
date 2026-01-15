@@ -255,7 +255,7 @@ export default function AdminTemplatesPage({
                 </div>
 
                 <CardContent className="p-4">
-                  <h3 className="h-[30px] font-semibold text-lg text-gray-900 group-hover:text-purple-600 transition-colors">
+                  <h3 className="h-[60px] font-semibold text-lg text-gray-900 group-hover:text-purple-600 transition-colors">
                     {template.name}
                   </h3>
                   <p className="h-[40px] text-sm text-gray-600 mb-3 line-clamp-2">
