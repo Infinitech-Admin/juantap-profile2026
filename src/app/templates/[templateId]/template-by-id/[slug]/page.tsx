@@ -39,7 +39,7 @@ import {
 import { toast, Toaster } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Eye, Files, User2} from "lucide-react";
+import { Edit, Eye, Files, User2 } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
