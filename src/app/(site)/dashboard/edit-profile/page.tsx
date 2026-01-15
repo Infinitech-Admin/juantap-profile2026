@@ -135,7 +135,7 @@ export default function EditProfilePage() {
       });
  
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
+      const res = await fetch('/api/edit-profile', {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -146,15 +146,16 @@ export default function EditProfilePage() {
       if (res.ok) {
         // Refresh user data after successful save
         try {
-          const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user`, {
+          const userRes = await fetch('/api/edit-profile', {
             headers: {
               Authorization: `Bearer ${token}`,
-              Accept: "application/json",
             },
           });
 
           if (userRes.ok) {
             const userData = await userRes.json();
+            console.log("Updated avatar URL:", userData.avatar_url);
+            
             const socialLinks =
               userData?.profile?.social_links || userData?.profile?.socialLinks || [];
 
@@ -252,10 +253,9 @@ export default function EditProfilePage() {
       }
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user`, {
+        const res = await fetch('/api/edit-profile', {
           headers: {
             Authorization: `Bearer ${token}`,
-            Accept: "application/json",
           },
         });
 
