@@ -34,7 +34,6 @@ interface Profile {
   website?: string;
   location?: string;
   profile_image?: string;
-  avatar_url?: string;
 }
 
 interface SocialLink {
@@ -48,7 +47,6 @@ interface SocialLink {
 interface User {
   profile: Profile;
   profile_image?: string;
-  avatar_url?: string;
   email: string;
   display_name?: string;
   username?: string;
@@ -56,22 +54,6 @@ interface User {
   firstname?: string;
   lastname?: string;
 }
-
-// Helper function to get full image URL
-const getImageUrl = (path: string | null | undefined): string => {
-  if (!path) return "/avatar.png";
-  
-  // If it's already a full URL, return it as is
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
-  }
-  
-  // If it's a relative path, prepend the IMAGE URL from env
-  const imageUrl = process.env.NEXT_PUBLIC_IMAGE_URL || 'http://localhost:8000';
-  // Remove leading slash if present to avoid double slashes
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  return `${imageUrl}/${cleanPath}`;
-};
 
 export default function EditProfilePage() {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -135,7 +117,7 @@ export default function EditProfilePage() {
       });
  
     try {
-      const res = await fetch('/api/edit-profile', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -144,18 +126,17 @@ export default function EditProfilePage() {
       });
 
       if (res.ok) {
-        // Refresh user data after successful save
+        // Refresh user data after successful save so we get updated avatar and profile
         try {
-          const userRes = await fetch('/api/edit-profile', {
+          const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user`, {
             headers: {
               Authorization: `Bearer ${token}`,
+              Accept: "application/json",
             },
           });
 
           if (userRes.ok) {
             const userData = await userRes.json();
-            console.log("Updated avatar URL:", userData.avatar_url);
-            
             const socialLinks =
               userData?.profile?.social_links || userData?.profile?.socialLinks || [];
 
@@ -163,7 +144,6 @@ export default function EditProfilePage() {
               ...prev,
               ...userData.profile,
               profile_image: userData.profile_image || prev.profile_image,
-              avatar_url: userData.avatar_url || prev.avatar_url,
               display_name: userData.display_name ?? prev.display_name,
               email: userData.email ?? prev.email,
               username: userData.username ?? prev.username,
@@ -181,13 +161,9 @@ export default function EditProfilePage() {
                 is_visible: !!(link.isVisible ?? link.is_visible),
               }))
             );
-            
-            // Clear the preview URL after successful save
-            setPreviewURL(null);
-            setAvatarFile(null);
           }
         } catch (e) {
-          console.error("Failed to refresh user data", e);
+          // ignore
         }
 
         toast.success("Profile saved!");
@@ -203,6 +179,7 @@ export default function EditProfilePage() {
         if (err?.errors?.username) {
           toast.error("Username is already taken. Please choose another.");
         } else {
+          // Safely extract the first validation message
           const values = Object.values(err?.errors || {});
           let firstError: string | undefined;
 
@@ -218,6 +195,7 @@ export default function EditProfilePage() {
           toast.error(firstError || "Validation error. Please check your input.");
         }
       } else {
+        // Attempt to parse JSON, fall back to text
         let body: any = null;
         try {
           body = await res.json();
@@ -230,7 +208,9 @@ export default function EditProfilePage() {
         }
 
         console.error("Profile save failed", { status: res.status, body });
-        toast.error(`Error saving profile: ${res.status}`);
+        toast.error(`Error saving profile: ${res.status} ${
+          body && typeof body === "string" ? body : JSON.stringify(body)
+        }`);
       }
     } catch (err) {
       console.error("Failed to save profile", err);
@@ -240,33 +220,29 @@ export default function EditProfilePage() {
         toast.error("Failed to save profile. Check console for details.");
       }
     } finally {
-      setIsSaving(false);
+      setIsSaving(false); // stop loading
     }
   };
 
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found");
-        return;
-      }
+      if (!token) return; 
 
       try {
-        const res = await fetch('/api/edit-profile', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user`, {
           headers: {
             Authorization: `Bearer ${token}`,
+            Accept: "application/json",
           },
         });
 
         if (res.ok) {
           const userData = await res.json();
-          console.log("Avatar URL from backend:", userData.avatar_url);
 
           const {
             profile,
             profile_image,
-            avatar_url,
             email,
             display_name,
             username,
@@ -274,20 +250,19 @@ export default function EditProfilePage() {
             firstname,
             lastname,
           } = userData;
-          const socialLinks = userData?.profile?.social_links || userData?.profile?.socialLinks || [];
+          const socialLinks = userData?.profile?.social_links || []; 
 
           setProfile((prev: Profile) => ({
             ...prev,
             ...profile,
             profile_image,
-            avatar_url, // Use avatar_url directly from backend
             display_name,
             email,
             username,
             name,
             firstname,
             lastname,
-          }));
+          })); 
 
           setSocialLinks(
             socialLinks.map((link: SocialLink) => ({
@@ -296,9 +271,7 @@ export default function EditProfilePage() {
             }))
           );
 
-          setCurrentUser(userData);
-        } else {
-          console.error("API returned error:", res.status);
+          setCurrentUser(userData); // ✅ Fix: move here inside the if block
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -325,10 +298,11 @@ export default function EditProfilePage() {
       setIsCheckingUsername(true);
 
       try {
-        const res = await fetch(`/api/check-username?username=${username}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/profile/${username}`
+        );
         if (res.ok) {
-          const data = await res.json();
-          setUsernameError(data.available ? null : "Username is already taken");
+          setUsernameError("Username is already taken");
         } else {
           setUsernameError(null);
         }
@@ -341,7 +315,7 @@ export default function EditProfilePage() {
 
     const timeout = setTimeout(checkUsername, 500);
     return () => clearTimeout(timeout);
-  }, [profile.username, currentUser?.username]);
+  }, [profile.username, currentUser?.username]); // ✅ no need for setIsCheckingUsername
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewURL, setPreviewURL] = useState<string | null>(null);
@@ -356,13 +330,15 @@ export default function EditProfilePage() {
     }
     const user = JSON.parse(userData);
 
+    console.log("user admin ", user.is_admin);
+
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
     if (!token) {
-      router.push("/login");
+      router.push("/login"); // redirect if no token
     } else {
-      setIsAuthenticated(true);
+      setIsAuthenticated(true); // allow access if token exists
       if (!user.is_admin) {
         router.push(`/dashboard/edit-profile/`);
       } else {
@@ -371,6 +347,8 @@ export default function EditProfilePage() {
     }
   }, [router]);
 
+  // ✅ ADD THIS LINE BEFORE THE RETURN
+  // Show nothing while checking auth
   if (isAuthenticated === null) return null;
   if (!profile) return <div className="p-8 text-white">Loading profile...</div>; 
 
@@ -378,6 +356,7 @@ export default function EditProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          {/* Header */} 
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
               <Link href="/">
@@ -397,6 +376,7 @@ export default function EditProfilePage() {
           </div>
 
           <div className="space-y-8">
+            {/* Profile Picture */} 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -408,19 +388,23 @@ export default function EditProfilePage() {
                 <div className="flex items-center gap-4">
                   <Avatar className="w-32 h-32">
                     <AvatarImage
-                      src={previewURL || profile.avatar_url || "/avatar.png"}
-                      alt="Profile picture"
-                      onError={(e) => {
-                        console.error("Image failed to load:", e.currentTarget.src);
-                        e.currentTarget.src = "/avatar.png";
-                      }}
+                      src={
+                        previewURL ||
+                        (profile.profile_image
+                          ? // if backend returned a full URL use it, otherwise use storage path
+                            (profile.profile_image.startsWith("http")
+                              ? profile.profile_image
+                              : `${process.env.NEXT_PUBLIC_IMAGE_URL}/storage/${profile.profile_image}`)
+                          : "/avatar.png")
+                      }
                     />
                     <AvatarFallback className="text-lg">
-                      {profile?.name?.[0] || profile?.firstname?.[0] || "U"}
+                      {profile?.name?.[0] ?? ""}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="space-y-2">
+                    {/* Hidden file input with ref */} 
                     <input
                       type="file"
                       accept="image/png, image/jpeg"
@@ -429,14 +413,14 @@ export default function EditProfilePage() {
                         const file = e.target.files?.[0];
 
                         if (file) {
-                          const fileSizeMB = file.size / (1024 * 1024);
+                          const fileSizeMB = file.size / (1024 * 1024); // Convert bytes to MB
                           const validTypes = ["image/jpeg", "image/png"];
 
                           if (!validTypes.includes(file.type)) {
                             toast.error(
                               "Invalid file type. Only JPG and PNG are allowed."
                             );
-                            e.target.value = "";
+                            e.target.value = ""; // Clear the input
                             return;
                           }
 
@@ -444,7 +428,7 @@ export default function EditProfilePage() {
                             toast.error(
                               "File size exceeds 5MB. Please choose a smaller image."
                             );
-                            e.target.value = "";
+                            e.target.value = ""; // Clear the input
                             return;
                           }
 
@@ -471,6 +455,7 @@ export default function EditProfilePage() {
               </CardContent>
             </Card>
 
+            {/* Basic Information */} 
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
@@ -528,13 +513,14 @@ export default function EditProfilePage() {
                         id="username"
                         value={profile.username || ""}
                         onChange={(e) => {
+                          // Allow only alphanumeric + underscores, limit to 8 chars
                           const value = e.target.value
                             .replace(/[^a-zA-Z0-9_]/g, "")
                             .slice(0, 10);
                           setProfile({ ...profile, username: value });
                         }}
                         placeholder="username"
-                        maxLength={15}
+                        maxLength={15} // enforce at the DOM level
                         className={
                           usernameError
                             ? "border-red-500 focus:ring-red-500 focus:border-red-500"
@@ -565,10 +551,13 @@ export default function EditProfilePage() {
                     placeholder="Tell people about yourself..."
                     rows={3}
                   />
+
+                  <p className="text-sm text-gray-500 mt-1"></p>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Contact Information */} 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -653,6 +642,7 @@ export default function EditProfilePage() {
               </CardContent>
             </Card>
 
+            {/* Social Links */} 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -743,6 +733,7 @@ export default function EditProfilePage() {
               </CardContent>
             </Card>
 
+            {/* Save Button */} 
             <div className="flex justify-end">
               <Button
                 onClick={handleSave}
