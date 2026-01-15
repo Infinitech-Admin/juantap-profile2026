@@ -325,11 +325,10 @@ export default function EditProfilePage() {
       setIsCheckingUsername(true);
 
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/profile/${username}`
-        );
+        const res = await fetch(`/api/check-username?username=${username}`);
         if (res.ok) {
-          setUsernameError("Username is already taken");
+          const data = await res.json();
+          setUsernameError(data.available ? null : "Username is already taken");
         } else {
           setUsernameError(null);
         }
