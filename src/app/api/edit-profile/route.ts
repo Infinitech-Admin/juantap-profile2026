@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Use server-side env variable (not exposed to browser)
+const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
+
 export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -8,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user`, {
+    const response = await fetch(`${API_URL}/user`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
+    const response = await fetch(`${API_URL}/profile`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
