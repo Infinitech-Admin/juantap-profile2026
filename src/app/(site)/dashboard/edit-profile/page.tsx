@@ -61,14 +61,16 @@ interface User {
 const getImageUrl = (path: string | null | undefined): string => {
   if (!path) return "/avatar.png";
   
-  // If it's already a full URL, return it
+  // If it's already a full URL, return it as is
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
   
   // If it's a relative path, prepend the IMAGE URL from env
   const imageUrl = process.env.NEXT_PUBLIC_IMAGE_URL || 'http://localhost:8000';
-  return `${imageUrl}/${path}`;
+  // Remove leading slash if present to avoid double slashes
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return `${imageUrl}/${cleanPath}`;
 };
 
 export default function EditProfilePage() {
@@ -256,6 +258,20 @@ export default function EditProfilePage() {
 
         if (res.ok) {
           const userData = await res.json();
+          
+          // Debug logging
+          console.log('=== PROFILE IMAGE DEBUG ===');
+          console.log('Full user data:', userData);
+          console.log('profile_image:', userData.profile_image);
+          console.log('avatar_url:', userData.avatar_url);
+          console.log('NEXT_PUBLIC_IMAGE_URL:', process.env.NEXT_PUBLIC_IMAGE_URL);
+          
+          if (userData.avatar_url) {
+            console.log('Using avatar_url directly:', userData.avatar_url);
+          } else if (userData.profile_image) {
+            console.log('Will construct URL from profile_image:', getImageUrl(userData.profile_image));
+          }
+          console.log('=========================');
 
           const {
             profile,
@@ -401,8 +417,16 @@ export default function EditProfilePage() {
                 <div className="flex items-center gap-4">
                   <Avatar className="w-32 h-32">
                     <AvatarImage
-                      src={previewURL || getImageUrl(profile.avatar_url || profile.profile_image)}
+                      src={
+                        previewURL || 
+                        profile.avatar_url || 
+                        (profile.profile_image ? getImageUrl(profile.profile_image) : "/avatar.png")
+                      }
                       alt="Profile picture"
+                      onError={(e) => {
+                        console.error("Image failed to load:", e.currentTarget.src);
+                        e.currentTarget.src = "/avatar.png";
+                      }}
                     />
                     <AvatarFallback className="text-lg">
                       {profile?.name?.[0] || profile?.firstname?.[0] || "U"}
