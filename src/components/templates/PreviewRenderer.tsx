@@ -32,6 +32,7 @@ interface SocialLink {
   platform: string
   username: string
   url: string
+  isVisible?: boolean | number
 }
 
 interface PreviewRendererProps {
@@ -86,22 +87,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
     toast.success("Copied!")
-  }
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: template?.name ?? "My Profile",
-          text: template?.description ?? "",
-          url: profileUrl,
-        })
-      } catch (err) {
-        console.error("Error sharing:", err)
-      }
-    } else {
-      alert("Sharing not supported.")
-    }
   }
 
   const avatarUrl = user?.avatar_url || null
@@ -175,7 +160,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           {/* Email */}
           {user?.email && (
             <>
-              {user.email.split(',').map((email, index) => (
+              {user.email.split(',').map((email: string, index: number) => (
                 <div
                   key={index}
                   className="flex justify-between items-center rounded-lg p-3 text-sm"
@@ -204,7 +189,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           {/* Phone */}
           {user?.profile?.phone && (
             <>
-              {user.profile.phone.split(',').map((phone, index) => (
+              {user.profile.phone.split(',').map((phone: string, index: number) => (
                 <div
                   key={index}
                   className="flex justify-between items-center rounded-lg p-3 text-sm"
@@ -233,7 +218,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           {/* Website */}
           {user?.profile?.website && (
             <>
-              {user.profile.website.split(',').map((website, index) => (
+              {user.profile.website.split(',').map((website: string, index: number) => (
                 <div
                   key={index}
                   className="flex justify-between items-center rounded-lg p-3 text-sm"
@@ -269,7 +254,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           {/* Location */}
           {user?.profile?.location && (
             <>
-              {user.profile.location.split(',').map((location, index) => (
+              {user.profile.location.split(',').map((location: string, index: number) => (
                 <div
                   key={index}
                   className="flex justify-between items-center rounded-lg p-3 text-sm"
@@ -311,7 +296,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
 
             <div className="grid grid-cols-2 gap-3">
               {user?.profile?.socialLinks
-                ?.filter((link) => link.isVisible === true || link.isVisible === 1)
+                ?.filter((link: SocialLink) => link.isVisible === true || link.isVisible === 1)
                 .map((link: SocialLink) => {
                   const platformKey = link.platform?.toLowerCase()
                   const icon = socialIconMap[platformKey] || <Globe size={14} />
