@@ -253,31 +253,26 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
 
           {/* Location */}
           {user?.profile?.location && (
-            <>
-              {user.profile.location.split(',').map((location: string, index: number) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center rounded-lg p-3 text-sm"
-                  style={{
-                    backgroundColor: `${template?.colors?.primary}10`,
-                    fontFamily: template?.fonts?.body,
-                  }}
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
-                    <MapPin size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
-                    <span className="truncate">{location.trim()}</span>
-                  </div>
-                  <button 
-                    className="hover:opacity-70 ml-3 flex-shrink-0" 
-                    style={{ color: template?.colors?.secondary }} 
-                    onClick={() => handleCopy(location.trim())}
-                    aria-label={`Copy ${location.trim()}`}
-                  >
-                    <Copy size={16} />
-                  </button>
-                </div>
-              ))}
-            </>
+            <div
+              className="flex justify-between items-center rounded-lg p-3 text-sm"
+              style={{
+                backgroundColor: `${template?.colors?.primary}10`,
+                fontFamily: template?.fonts?.body,
+              }}
+            >
+              <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
+                <MapPin size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
+                <span className="truncate">{user.profile.location}</span>
+              </div>
+              <button 
+                className="hover:opacity-70 ml-3 flex-shrink-0" 
+                style={{ color: template?.colors?.secondary }} 
+                onClick={() => handleCopy(user.profile.location)}
+                aria-label={`Copy ${user.profile.location}`}
+              >
+                <Copy size={16} />
+              </button>
+            </div>
           )}
         </div>
 
