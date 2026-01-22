@@ -174,7 +174,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
 
           {/* Email */}
           {user?.email && (
-            <div className="space-y-3">
+            <>
               {user.email.split(',').map((email, index) => (
                 <div
                   key={index}
@@ -198,12 +198,12 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   </button>
                 </div>
               ))}
-            </div>
+            </>
           )}
 
           {/* Phone */}
           {user?.profile?.phone && (
-            <div className="space-y-3">
+            <>
               {user.profile.phone.split(',').map((phone, index) => (
                 <div
                   key={index}
@@ -227,12 +227,12 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   </button>
                 </div>
               ))}
-            </div>
+            </>
           )}
 
           {/* Website */}
           {user?.profile?.website && (
-            <div className="space-y-3">
+            <>
               {user.profile.website.split(',').map((website, index) => (
                 <div
                   key={index}
@@ -263,12 +263,12 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   </button>
                 </div>
               ))}
-            </div>
+            </>
           )}
 
           {/* Location */}
           {user?.profile?.location && (
-            <div className="space-y-3">
+            <>
               {user.profile.location.split(',').map((location, index) => (
                 <div
                   key={index}
@@ -292,7 +292,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   </button>
                 </div>
               ))}
-            </div>
+            </>
           )}
         </div>
 
