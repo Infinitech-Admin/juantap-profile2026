@@ -126,17 +126,16 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
         {/* Avatar & Bio */}
         <div className="relative flex flex-col items-center mt-6 px-6">
           <div className="w-56 h-72 border-4 border-white shadow-lg overflow-hidden bg-white/20 -mt-16 flex items-center justify-center">
-  {avatarUrl ? (
-    <img
-      src={avatarUrl || user?.avatar_url}
-      alt={template?.user?.name || "Author"}
-      className="w-full h-full object-cover object-top"
-    />
-  ) : (
-    <UserIcon size={48} className="text-gray-400" />
-  )}
-</div>
-
+            {avatarUrl ? (
+              <img
+                src={avatarUrl || user?.avatar_url}
+                alt={template?.user?.name || "Author"}
+                className="w-full h-full object-cover object-top"
+              />
+            ) : (
+              <UserIcon size={48} className="text-gray-400" />
+            )}
+          </div>
 
           <h1
             className="mt-4 text-xl font-bold"
@@ -174,91 +173,125 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           </h2>
 
           {/* Email */}
-         {user?.email && (
-        <div className="space-y-3">
-          {user.email.split(',').map((email, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center rounded-lg p-3 text-sm"
-              style={{
-                backgroundColor: `${template?.colors?.primary}10`,
-                fontFamily: template?.fonts?.body,
-              }}
-            >
-              <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
-                <Mail size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
-                <span className="truncate">{email.trim()}</span>
-              </div>
-              <button 
-                className="hover:opacity-70 ml-3 flex-shrink-0" 
-                style={{ color: template?.colors?.secondary }} 
-                onClick={() => handleCopy(email.trim())}
-                aria-label={`Copy ${email.trim()}`}
-              >
-                <Copy size={16} />
-              </button>
+          {user?.email && (
+            <div className="space-y-3">
+              {user.email.split(',').map((email, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center rounded-lg p-3 text-sm"
+                  style={{
+                    backgroundColor: `${template?.colors?.primary}10`,
+                    fontFamily: template?.fonts?.body,
+                  }}
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
+                    <Mail size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
+                    <span className="truncate">{email.trim()}</span>
+                  </div>
+                  <button 
+                    className="hover:opacity-70 ml-3 flex-shrink-0" 
+                    style={{ color: template?.colors?.secondary }} 
+                    onClick={() => handleCopy(email.trim())}
+                    aria-label={`Copy ${email.trim()}`}
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
           {/* Phone */}
           {user?.profile?.phone && (
-            <div
-              className="flex justify-between items-center rounded-lg p-3 text-sm"
-              style={{
-                backgroundColor: `${template?.colors?.primary}10`,
-                fontFamily: template?.fonts?.body,
-              }}
-            >
-              <div className="flex items-center gap-2" style={{ color: template?.colors?.text }}>
-                <Phone size={16} style={{ color: template?.colors?.accent }} /> {user.profile.phone}
-              </div>
-
-              <button className="hover:opacity-70" style={{ color: template?.colors?.secondary }} onClick={() => handleCopy(user.profile.phone)}>
-                <Copy size={16} />
-              </button>
+            <div className="space-y-3">
+              {user.profile.phone.split(',').map((phone, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center rounded-lg p-3 text-sm"
+                  style={{
+                    backgroundColor: `${template?.colors?.primary}10`,
+                    fontFamily: template?.fonts?.body,
+                  }}
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
+                    <Phone size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
+                    <span className="truncate">{phone.trim()}</span>
+                  </div>
+                  <button 
+                    className="hover:opacity-70 ml-3 flex-shrink-0" 
+                    style={{ color: template?.colors?.secondary }} 
+                    onClick={() => handleCopy(phone.trim())}
+                    aria-label={`Copy ${phone.trim()}`}
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
           {/* Website */}
           {user?.profile?.website && (
-            <div
-              className="flex justify-between items-center rounded-lg p-3 text-sm"
-              style={{
-                backgroundColor: `${template?.colors?.primary}10`,
-                fontFamily: template?.fonts?.body,
-              }}
-            >
-              <div className="flex items-center gap-2" style={{ color: template?.colors?.text }}>
-                <Globe size={16} style={{ color: template?.colors?.accent }} />
-
-                <a href={user.profile.website} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-70">
-                  {user.profile.website}
-                </a>
-              </div>
-              <button className="hover:opacity-70" style={{ color: template?.colors?.secondary }} onClick={() => handleCopy(user.profile.website)}>
-                <Copy size={16} />
-              </button>
+            <div className="space-y-3">
+              {user.profile.website.split(',').map((website, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center rounded-lg p-3 text-sm"
+                  style={{
+                    backgroundColor: `${template?.colors?.primary}10`,
+                    fontFamily: template?.fonts?.body,
+                  }}
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
+                    <Globe size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
+                    <a 
+                      href={website.trim()} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="underline hover:opacity-70 truncate"
+                    >
+                      {website.trim()}
+                    </a>
+                  </div>
+                  <button 
+                    className="hover:opacity-70 ml-3 flex-shrink-0" 
+                    style={{ color: template?.colors?.secondary }} 
+                    onClick={() => handleCopy(website.trim())}
+                    aria-label={`Copy ${website.trim()}`}
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
           {/* Location */}
           {user?.profile?.location && (
-            <div
-              className="flex justify-between items-center rounded-lg p-3 text-sm"
-              style={{
-                backgroundColor: `${template?.colors?.primary}10`,
-                fontFamily: template?.fonts?.body,
-              }}
-            >
-              <div className="flex items-center gap-2" style={{ color: template?.colors?.text }}>
-                <MapPin size={16} style={{ color: template?.colors?.accent }} /> {user.profile.location}
-              </div>
-
-              <button className="hover:opacity-70" style={{ color: template?.colors?.secondary }} onClick={() => handleCopy(user.profile.location)}>
-                <Copy size={16} />
-              </button>
+            <div className="space-y-3">
+              {user.profile.location.split(',').map((location, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center rounded-lg p-3 text-sm"
+                  style={{
+                    backgroundColor: `${template?.colors?.primary}10`,
+                    fontFamily: template?.fonts?.body,
+                  }}
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
+                    <MapPin size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
+                    <span className="truncate">{location.trim()}</span>
+                  </div>
+                  <button 
+                    className="hover:opacity-70 ml-3 flex-shrink-0" 
+                    style={{ color: template?.colors?.secondary }} 
+                    onClick={() => handleCopy(location.trim())}
+                    aria-label={`Copy ${location.trim()}`}
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -279,12 +312,11 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
             <div className="grid grid-cols-2 gap-3">
               {user?.profile?.socialLinks
                 ?.filter((link) => link.isVisible === true || link.isVisible === 1)
-
                 .map((link: SocialLink) => {
                   const platformKey = link.platform?.toLowerCase()
                   const icon = socialIconMap[platformKey] || <Globe size={14} />
                   return (
-                    <a
+                    
                       key={link.id}
                       href={link.url}
                       target="_blank"
