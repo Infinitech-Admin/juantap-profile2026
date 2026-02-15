@@ -129,8 +129,10 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
               <img
                 src={avatarUrl || user?.avatar_url}
                 alt={template?.user?.name || "Author"}
-                className="w-full h-full object-cover"
+                className="object-cover"
                 style={{
+                  width: "120%",
+                  height: "120%",
                   objectFit: "cover",
                   objectPosition: "center",
                 }}
