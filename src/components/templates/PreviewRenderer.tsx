@@ -19,6 +19,7 @@ import {
   MessageCircle,
   MapPin,
   Phone,
+  Award,
 } from "lucide-react"
 import { User as UserIcon } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -95,6 +96,10 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
   const bioItems = user?.profile?.bio 
     ? user.profile.bio.split(',').map(item => item.trim()).filter(item => item.length > 0)
     : []
+
+  // Check if we should show the Certificate of Legitimacy link
+  const showCertificate = user?.username?.toLowerCase() === "arnldacra"
+  const certificateUrl = "https://www.juantap.info/arnldacra" // Or your certificate image URL
 
   return (
     <div className="w-full flex justify-center p-5" style={{ backgroundColor: "#f9fafb" }}>
@@ -186,9 +191,10 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           {user?.email && (
             <>
               {user.email.split(',').map((email: string, index: number) => (
-                <div
+                <a
                   key={index}
-                  className="flex justify-between items-center rounded-lg p-3 text-sm"
+                  href={`mailto:${email.trim()}`}
+                  className="flex justify-between items-center rounded-lg p-3 text-sm hover:opacity-70 transition cursor-pointer"
                   style={{
                     backgroundColor: `${template?.colors?.primary}10`,
                     fontFamily: template?.fonts?.body || template?.fonts?.description,
@@ -203,12 +209,15 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   <button 
                     className="hover:opacity-70 ml-3 flex-shrink-0" 
                     style={{ color: template?.colors?.icon || template?.colors?.accent }} 
-                    onClick={() => handleCopy(email.trim())}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleCopy(email.trim())
+                    }}
                     aria-label={`Copy ${email.trim()}`}
                   >
                     <Copy size={16} />
                   </button>
-                </div>
+                </a>
               ))}
             </>
           )}
@@ -217,9 +226,10 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           {user?.profile?.phone && (
             <>
               {user.profile.phone.split(',').map((phone: string, index: number) => (
-                <div
+                <a
                   key={index}
-                  className="flex justify-between items-center rounded-lg p-3 text-sm"
+                  href={`tel:${phone.trim()}`}
+                  className="flex justify-between items-center rounded-lg p-3 text-sm hover:opacity-70 transition cursor-pointer"
                   style={{
                     backgroundColor: `${template?.colors?.primary}10`,
                     fontFamily: template?.fonts?.body || template?.fonts?.description,
@@ -234,12 +244,15 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   <button 
                     className="hover:opacity-70 ml-3 flex-shrink-0" 
                     style={{ color: template?.colors?.icon || template?.colors?.accent }} 
-                    onClick={() => handleCopy(phone.trim())}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleCopy(phone.trim())
+                    }}
                     aria-label={`Copy ${phone.trim()}`}
                   >
                     <Copy size={16} />
                   </button>
-                </div>
+                </a>
               ))}
             </>
           )}
@@ -284,8 +297,11 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
 
           {/* Location */}
           {user?.profile?.location && (
-            <div
-              className="flex justify-between items-center rounded-lg p-3 text-sm"
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(user.profile.location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex justify-between items-center rounded-lg p-3 text-sm hover:opacity-70 transition cursor-pointer"
               style={{
                 backgroundColor: `${template?.colors?.primary}10`,
                 fontFamily: template?.fonts?.body || template?.fonts?.description,
@@ -300,17 +316,20 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
               <button 
                 className="hover:opacity-70 ml-3 flex-shrink-0" 
                 style={{ color: template?.colors?.icon || template?.colors?.accent }} 
-                onClick={() => handleCopy(user.profile.location)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleCopy(user.profile.location)
+                }}
                 aria-label={`Copy ${user.profile.location}`}
               >
                 <Copy size={16} />
               </button>
-            </div>
+            </a>
           )}
         </div>
 
         {/* Social Links */}
-        {user?.profile?.socialLinks && user?.profile?.socialLinks?.length > 0 && (
+        {((user?.profile?.socialLinks && user?.profile?.socialLinks?.length > 0) || showCertificate) && (
           <div className="px-6 pb-6">
             <h2
               className="text-sm font-semibold uppercase mb-3"
@@ -346,6 +365,26 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                     </a>
                   )
                 })}
+              
+              {/* Certificate of Legitimacy Button */}
+              {showCertificate && (
+                <a
+                  href={certificateUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 rounded-lg p-2 text-sm hover:opacity-80 transition"
+                  style={{
+                    backgroundColor: `${template?.colors?.accent}15`,
+                    color: template?.colors?.description || "#000000",
+                    fontFamily: template?.fonts?.body || template?.fonts?.description,
+                  }}
+                >
+                  <span style={{ color: template?.colors?.icon || template?.colors?.accent }}>
+                    <Award size={16} />
+                  </span>
+                  <span>Certificate of Legitimacy</span>
+                </a>
+              )}
             </div>
           </div>
         )}
