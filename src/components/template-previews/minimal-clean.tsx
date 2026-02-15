@@ -55,13 +55,6 @@ interface ProfileData {
     fontFamily?: string;
     gradientFrom?: string;
     gradientTo?: string;
-    // ✅ ADD THESE NEW COLOR PROPERTIES
-    titleColor?: string;
-    descriptionColor?: string;
-    iconColor?: string;
-    borderColor?: string;
-    nameBackground?: string;
-    cardBackground?: string;
   };
 }
 
@@ -136,13 +129,6 @@ export function MinimalClean() {
             fontFamily: data.profile?.font_style || "Inter, sans-serif",
             gradientFrom: data.profile?.gradientFrom,
             gradientTo: data.profile?.gradientTo,
-            // ✅ ADD THESE NEW COLOR PROPERTIES FROM TEMPLATE
-            titleColor: data.template?.colors?.title || "#FFFFFF",
-            descriptionColor: data.template?.colors?.description || "#E5E5E5",
-            iconColor: data.template?.colors?.icon || "#FFD700",
-            borderColor: data.template?.colors?.border || "#FFD700",
-            nameBackground: data.template?.colors?.nameBackground || "transparent",
-            cardBackground: data.template?.colors?.background || "#1a1a1a",
           },
         });
       } catch (err: any) {
@@ -160,7 +146,7 @@ export function MinimalClean() {
       try {
         await navigator.share({
           title: "Check this out!",
-          text: "Here's something interesting for you.",
+          text: "Here’s something interesting for you.",
           url: window.location.href,
         });
       } catch (err) {
@@ -182,39 +168,22 @@ export function MinimalClean() {
   if (error) return <p className="p-6 text-red-500">Error: {error}</p>;
   if (!profile) return <p className="p-6 text-gray-500">No profile found.</p>;
 
-  const { 
-    backgroundColor, 
-    textColor, 
-    fontFamily, 
-    gradientFrom, 
-    gradientTo,
-    // ✅ DESTRUCTURE NEW COLOR PROPERTIES
-    titleColor = "#FFFFFF",
-    descriptionColor = "#E5E5E5",
-    iconColor = "#FFD700",
-    borderColor = "#FFD700",
-    nameBackground = "transparent",
-    cardBackground = "#1a1a1a",
-  } = profile.template || {};
+  const { backgroundColor, textColor, fontFamily, gradientFrom, gradientTo } =
+    profile.template || {};
 
   return (
     <div
       className="w-full flex justify-center p-5" 
       style={{
-        background: cardBackground, // ✅ USE CARD BACKGROUND
+        background: backgroundColor,
         color: textColor,
         fontFamily,
       }}
     >
-      <div 
-        className="w-full max-w-lg shadow-lg rounded-2xl overflow-hidden flex flex-col"
-        style={{
-          backgroundColor: backgroundColor || "#ffffff",
-        }}
-      >
+      <div className="w-full max-w-lg bg-white shadow-lg rounded-2xl overflow-hidden flex flex-col">
         {/* Cover */}
         <div
-          className="w-full h-48"
+          className="w-full"
           style={{
             background: !profile.coverImage
               ? `linear-gradient(135deg, ${gradientFrom || "#667eea"}, ${
@@ -227,20 +196,14 @@ export function MinimalClean() {
             <img
               src={profile.coverImage}
               alt="Cover"
-              className="w-full h-full object-cover"
+              className="w-full object-cover"
             /> 
           )}
         </div>
 
         {/* Avatar & Bio */}
         <div className="relative flex flex-col items-center mt-6 px-6">
-          {/* ✅ AVATAR WITH COLORED BORDER */}
-          <div 
-            className="w-28 h-28 rounded-full shadow-lg overflow-hidden bg-gray-200 flex items-center justify-center"
-            style={{
-              border: `4px solid ${borderColor}`, // ✅ APPLY BORDER COLOR
-            }}
-          >
+          <div className="w-28 h-28 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-200 flex items-center justify-center">
             {profile.avatar ? (
               <img
                 src={`${imageUrl}/storage/${profile.avatar}`}
@@ -251,30 +214,13 @@ export function MinimalClean() {
               <User size={32} className="text-gray-500" />
             )}
           </div>
-
-          {/* ✅ NAME WITH TITLE COLOR */}
-          <h1 
-            className="mt-4 text-xl font-bold px-4 py-2 rounded-lg inline-block"
-            style={{
-              color: titleColor, // ✅ APPLY TITLE COLOR (WHITE)
-              backgroundColor: nameBackground, // ✅ APPLY NAME BACKGROUND (MAROON)
-            }}
-          >
+          <h1 className="mt-4 text-xl font-bold">
             {profile.displayName || "Display Name"}
           </h1> 
-
-          {/* ✅ LOCATION & WEBSITE WITH DESCRIPTION COLOR AND ICON COLOR */}
-          <div className="flex flex-wrap items-center gap-3 text-xs mt-2 justify-center">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mt-2 justify-center">
             {profile.location && (
-              <span 
-                className="flex items-center gap-1"
-                style={{ color: descriptionColor }} // ✅ APPLY DESCRIPTION COLOR
-              >
-                <MapPin 
-                  size={12} 
-                  style={{ color: iconColor }} // ✅ APPLY ICON COLOR (GOLD)
-                /> 
-                {profile.location}
+              <span className="flex items-center gap-1">
+                <MapPin size={12} /> {profile.location}
               </span>
             )}
             {profile.website && (
@@ -282,27 +228,14 @@ export function MinimalClean() {
                 href={profile.website}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1"
-                style={{ color: descriptionColor }} // ✅ APPLY DESCRIPTION COLOR
+                className="flex items-center gap-1 text-blue-500"
               > 
-                <Globe 
-                  size={12}
-                  style={{ color: iconColor }} // ✅ APPLY ICON COLOR (GOLD)
-                /> 
-                {profile.website}
+                <Globe size={12} /> {profile.website}
               </a>
             )}
           </div>
-
-          {/* ✅ BIO WITH DESCRIPTION COLOR */}
           {profile.bio && (
-            <p 
-              className="text-sm text-center mt-3 px-4 py-2 rounded-lg"
-              style={{
-                color: descriptionColor, // ✅ APPLY DESCRIPTION COLOR
-                backgroundColor: "rgba(0,0,0,0.2)", // Subtle dark background for bio
-              }}
-            >
+            <p className="text-sm text-gray-600 text-center mt-1">
               {profile.bio}
             </p>
           )} 
@@ -310,34 +243,18 @@ export function MinimalClean() {
 
         {/* Contact */}
         <div className="p-6 space-y-4">
-          {/* ✅ SECTION HEADER WITH TITLE COLOR */}
-          <h2 
-            className="text-sm font-semibold uppercase tracking-wide"
-            style={{ color: titleColor }} // ✅ APPLY TITLE COLOR (WHITE)
-          >
+          <h2 className="text-sm font-semibold text-gray-500 uppercase">
             Contact
           </h2>
            
           {profile.email && (
-            <div 
-              className="flex justify-between items-center rounded-lg p-3 text-sm"
-              style={{
-                backgroundColor: "rgba(255, 215, 0, 0.1)", // Subtle gold tint
-                border: `1px solid ${borderColor}`, // ✅ APPLY BORDER COLOR
-              }}
-            >
+            <div className="flex justify-between items-center bg-gray-50 rounded-lg p-3 text-sm">
               <div className="flex items-center gap-2">
-                {/* ✅ ICON WITH ICON COLOR */}
-                <Mail 
-                  size={16}
-                  style={{ color: iconColor }} // ✅ APPLY ICON COLOR (GOLD)
-                />
-                <span style={{ color: descriptionColor }}>{profile.email}</span>
+                <Mail size={16} /> {profile.email}
               </div>
               <button
-                className="hover:opacity-70 transition"
-                onClick={() => navigator.clipboard.writeText(profile.email || "")}
-                style={{ color: iconColor }} // ✅ APPLY ICON COLOR (GOLD)
+                className="text-gray-400 hover:text-gray-600"
+                onClick={() => navigator.clipboard.writeText(profile.email)}
               > 
                 <Copy size={16} />
               </button>
@@ -345,25 +262,13 @@ export function MinimalClean() {
           )}
  
           {profile.phone && (
-            <div 
-              className="flex justify-between items-center rounded-lg p-3 text-sm"
-              style={{
-                backgroundColor: "rgba(255, 215, 0, 0.1)", // Subtle gold tint
-                border: `1px solid ${borderColor}`, // ✅ APPLY BORDER COLOR
-              }}
-            >
+            <div className="flex justify-between items-center bg-gray-50 rounded-lg p-3 text-sm">
               <div className="flex items-center gap-2">
-                {/* ✅ ICON WITH ICON COLOR */}
-                <Phone 
-                  size={16}
-                  style={{ color: iconColor }} // ✅ APPLY ICON COLOR (GOLD)
-                />
-                <span style={{ color: descriptionColor }}>{profile.phone}</span>
+                <Phone size={16} /> {profile.phone}
               </div>
               <button
-                className="hover:opacity-70 transition"
-                onClick={() => navigator.clipboard.writeText(profile.phone || "")}
-                style={{ color: iconColor }} // ✅ APPLY ICON COLOR (GOLD)
+                className="text-gray-400 hover:text-gray-600"
+                onClick={() => navigator.clipboard.writeText(profile.phone)}
               > 
                 <Copy size={16} />
               </button>
@@ -374,11 +279,7 @@ export function MinimalClean() {
         {/* Social Links */}
         {profile.socialLinks?.length ? (
           <div className="px-6 pb-6">
-            {/* ✅ SECTION HEADER WITH TITLE COLOR */}
-            <h2 
-              className="text-sm font-semibold uppercase tracking-wide mb-3"
-              style={{ color: titleColor }} // ✅ APPLY TITLE COLOR (WHITE)
-            >
+            <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">
               Connect with me
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -392,24 +293,15 @@ export function MinimalClean() {
                   const icon = socialIconMap[platformKey] || (
                     <Globe size={14} />
                   ); 
-                  
                   return (
                     <a
                       key={link.id}
                       href={link.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 rounded-lg p-2 text-sm hover:opacity-80 transition"
-                      style={{
-                        backgroundColor: "rgba(255, 215, 0, 0.1)", // Subtle gold tint
-                        border: `1px solid ${borderColor}`, // ✅ APPLY BORDER COLOR
-                        color: descriptionColor, // ✅ APPLY DESCRIPTION COLOR
-                      }}
+                      className="flex items-center gap-2 bg-gray-50 rounded-lg p-2 text-sm hover:bg-gray-100 transition"
                     >
-                      {/* ✅ CLONE ICON WITH ICON COLOR */}
-                      <span style={{ color: iconColor }}>
-                        {icon}
-                      </span>
+                      {icon}
                       {link.username}
                     </a>
                   );
@@ -419,34 +311,18 @@ export function MinimalClean() {
         ) : null}
 
         {/* Bottom Actions */}
-        <div 
-          className="flex justify-around border-t p-4"
-          style={{
-            borderColor: borderColor, // ✅ APPLY BORDER COLOR
-            backgroundColor: "rgba(0,0,0,0.2)", // Subtle dark background
-          }}
-        >
+        <div className="flex justify-around border-t bg-gray-50 p-4">
           <button
             onClick={() => setIsQRModalOpen(true)}
-            className="flex flex-col items-center text-sm hover:opacity-70 transition"
-            style={{ color: descriptionColor }} // ✅ APPLY DESCRIPTION COLOR
+            className="flex flex-col items-center text-sm"
           >
-            <QrCode 
-              className="w-5 h-5 mb-1"
-              style={{ color: iconColor }} // ✅ APPLY ICON COLOR (GOLD)
-            />
-            QR Code
+            <QrCode className="w-5 h-5 mb-1" /> QR Code
           </button>
           <button
             onClick={handleShare}
-            className="flex flex-col items-center text-sm hover:opacity-70 transition"
-            style={{ color: descriptionColor }} // ✅ APPLY DESCRIPTION COLOR
+            className="flex flex-col items-center text-sm"
           >
-            <Share2 
-              className="w-5 h-5 mb-1"
-              style={{ color: iconColor }} // ✅ APPLY ICON COLOR (GOLD)
-            />
-            Share
+            <Share2 className="w-5 h-5 mb-1" /> Share
           </button> 
         </div>
       </div>
@@ -489,4 +365,4 @@ export function MinimalClean() {
       </Dialog>
     </div>
   );
-}
+} 
