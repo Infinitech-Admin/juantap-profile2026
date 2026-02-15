@@ -116,22 +116,22 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
         {/* Avatar & Bio */}
         <div className="relative flex flex-col items-center mt-6 px-6">
           <div 
-            className="border-4 shadow-lg overflow-hidden bg-white/20 -mt-16 flex items-center justify-center"
+            className="border-8 shadow-xl overflow-hidden bg-white -mt-20 flex items-center justify-center"
             style={{
-              width: `${template?.profile_size || 224}px`,
-              height: `${(template?.profile_size || 224) * 1.3}px`,
-              borderColor: template?.colors?.border || "#ffffff",
-              borderRadius: template?.profile_shape === "rounded" ? "0.5rem" : "0",
+              width: "200px",
+              height: "200px",
+              borderColor: "#FFD700",
+              borderRadius: "50%",
             }}
           >
             {avatarUrl ? (
               <img
                 src={avatarUrl || user?.avatar_url}
                 alt={template?.user?.name || "Author"}
-                className="w-full h-full object-cover object-top"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <UserIcon size={48} className="text-gray-400" />
+              <UserIcon size={64} className="text-gray-400" />
             )}
           </div>
 
