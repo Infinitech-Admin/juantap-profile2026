@@ -167,7 +167,12 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
 
         {/* Avatar & Bio */}
         <div className="relative flex flex-col items-center mt-6 px-6">
-          <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white/20 -mt-12">
+          <div 
+            className="w-24 h-24 rounded-full shadow-lg overflow-hidden bg-white/20 -mt-12"
+            style={{
+              border: `4px solid ${template?.colors?.border || "#ffffff"}`, // ✅ USE BORDER COLOR
+            }}
+          >
             {author.avatar && !avatarError ? (
               <img
                 src={author.avatar}
@@ -181,21 +186,24 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               </div>
             )}
           </div>
+
+          {/* ✅ NAME - USE TITLE COLOR */}
           <h1
             className="mt-4 text-xl font-bold"
             style={{
               fontFamily: template?.fonts?.heading,
-              color: template?.colors?.text,
+              color: template?.colors?.title || "#111827", // ✅ USE TITLE COLOR (WHITE)
             }}
           >
             {author.displayName}
           </h1>
 
+          {/* ✅ BIO - USE DESCRIPTION COLOR */}
           {author.bio && (
             <p
               className="text-sm text-center mt-1"
               style={{
-                color: template?.colors?.secondary,
+                color: template?.colors?.description || "#6b7280", // ✅ USE DESCRIPTION COLOR (LIGHT GRAY)
                 fontFamily: template?.fonts?.body,
               }}
             >
@@ -210,10 +218,11 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           author.website ||
           author.location) && (
           <div className="p-6 space-y-4">
+            {/* ✅ CONTACT HEADER - USE TITLE COLOR */}
             <h2
               className="text-sm font-semibold uppercase"
               style={{
-                color: template?.colors?.secondary,
+                color: template?.colors?.title || "#111827", // ✅ USE TITLE COLOR (WHITE)
                 fontFamily: template?.fonts?.heading,
               }}
             >
@@ -231,14 +240,15 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               >
                 <div
                   className="flex items-center gap-2"
-                  style={{ color: template?.colors?.text }}
+                  style={{ color: template?.colors?.description || "#111827" }} // ✅ USE DESCRIPTION COLOR
                 >
-                  <Mail size={16} style={{ color: template?.colors?.accent }} />{" "}
+                  {/* ✅ ICON - USE ICON COLOR */}
+                  <Mail size={16} style={{ color: template?.colors?.icon || template?.colors?.accent }} />
                   {author.email}
                 </div>
                 <button
                   className="hover:opacity-70"
-                  style={{ color: template?.colors?.secondary }}
+                  style={{ color: template?.colors?.icon || template?.colors?.secondary }} // ✅ USE ICON COLOR
                   onClick={() => navigator.clipboard.writeText(author.email!)}
                 >
                   <Copy size={16} />
@@ -252,11 +262,12 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                 className="flex items-center gap-2 rounded-lg p-3 text-sm"
                 style={{
                   backgroundColor: `${template?.colors?.primary}10`,
-                  color: template?.colors?.text,
+                  color: template?.colors?.description || "#111827", // ✅ USE DESCRIPTION COLOR
                   fontFamily: template?.fonts?.body,
                 }}
               >
-                <Phone size={16} style={{ color: template?.colors?.accent }} />{" "}
+                {/* ✅ ICON - USE ICON COLOR */}
+                <Phone size={16} style={{ color: template?.colors?.icon || template?.colors?.accent }} />
                 {author.phone}
               </div>
             )}
@@ -270,11 +281,12 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                 className="flex items-center gap-2 rounded-lg p-3 text-sm hover:opacity-80 transition"
                 style={{
                   backgroundColor: `${template?.colors?.primary}10`,
-                  color: template?.colors?.text,
+                  color: template?.colors?.description || "#111827", // ✅ USE DESCRIPTION COLOR
                   fontFamily: template?.fonts?.body,
                 }}
               >
-                <Globe size={16} style={{ color: template?.colors?.accent }} />{" "}
+                {/* ✅ ICON - USE ICON COLOR */}
+                <Globe size={16} style={{ color: template?.colors?.icon || template?.colors?.accent }} />
                 {author.website}
               </a>
             )}
@@ -285,11 +297,12 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                 className="flex items-center gap-2 rounded-lg p-3 text-sm"
                 style={{
                   backgroundColor: `${template?.colors?.primary}10`,
-                  color: template?.colors?.text,
+                  color: template?.colors?.description || "#111827", // ✅ USE DESCRIPTION COLOR
                   fontFamily: template?.fonts?.body,
                 }}
               >
-                <MapPin size={16} style={{ color: template?.colors?.accent }} />{" "}
+                {/* ✅ ICON - USE ICON COLOR */}
+                <MapPin size={16} style={{ color: template?.colors?.icon || template?.colors?.accent }} />
                 {author.location}
               </div>
             )}
@@ -299,10 +312,11 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
         {/* Social Links */}
         {author.socialLinks?.length > 0 && (
           <div className="px-6 pb-6">
+            {/* ✅ CONNECT HEADER - USE TITLE COLOR */}
             <h2
               className="text-sm font-semibold uppercase mb-3 w-auto"
               style={{
-                color: template?.colors?.secondary,
+                color: template?.colors?.title || "#111827", // ✅ USE TITLE COLOR (WHITE)
                 fontFamily: template?.fonts?.heading,
               }}
             >
@@ -321,15 +335,16 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                     className={getSocialLinkClass()}
                     style={{
                       backgroundColor: `${template?.colors?.accent}15`,
-                      color: template?.colors?.text,
+                      color: template?.colors?.description || "#111827", // ✅ USE DESCRIPTION COLOR
                       fontFamily: template?.fonts?.body,
                     }}
                   >
-                    <span style={{ color: template?.colors?.accent }}>
+                    {/* ✅ ICON - USE ICON COLOR */}
+                    <span style={{ color: template?.colors?.icon || template?.colors?.accent }}>
                       {icon}
                     </span>
                     <span
-                      className={`text-xs   ${
+                      className={`text-xs ${
                         template.social_style === "circles"
                           ? "hidden"
                           : "inline-block"
@@ -356,23 +371,25 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           <button
             onClick={() => setIsQRModalOpen(true)}
             className="flex flex-col items-center text-sm hover:opacity-70"
-            style={{ color: template?.colors?.text }}
+            style={{ color: template?.colors?.description || "#111827" }} // ✅ USE DESCRIPTION COLOR
           >
+            {/* ✅ ICON - USE ICON COLOR */}
             <QrCode
               className="w-5 h-5 mb-1"
-              style={{ color: template?.colors?.accent }}
-            />{" "}
+              style={{ color: template?.colors?.icon || template?.colors?.accent }}
+            />
             QR Code
           </button>
           <button
             onClick={handleShare}
             className="flex flex-col items-center text-sm hover:opacity-70"
-            style={{ color: template?.colors?.text }}
+            style={{ color: template?.colors?.description || "#111827" }} // ✅ USE DESCRIPTION COLOR
           >
+            {/* ✅ ICON - USE ICON COLOR */}
             <Share2
               className="w-5 h-5 mb-1"
-              style={{ color: template?.colors?.accent }}
-            />{" "}
+              style={{ color: template?.colors?.icon || template?.colors?.accent }}
+            />
             Share
           </button>
         </div>
