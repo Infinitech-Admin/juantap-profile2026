@@ -102,12 +102,6 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
         bio: null,
         socialLinks: [],
       };
-
-  // Parse colors if stored as JSON string
-  const colors = typeof template?.colors === 'string' 
-    ? JSON.parse(template.colors) 
-    : template?.colors || {};
-
   const getConnectGridClass = () => {
     switch (template.connection_style) {
       case "list":
@@ -151,7 +145,6 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   return (
     <div
       className="w-full flex justify-center p-6"
@@ -160,7 +153,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
       <div
         className="w-full max-w-lg shadow-lg rounded-2xl overflow-hidden flex flex-col"
         style={{
-          backgroundColor: colors?.background || template?.colors?.background || "#ffffff",
+          backgroundColor: template?.colors?.background,
           fontFamily: template?.fonts?.body,
         }}
       >
@@ -168,20 +161,13 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
         <div
           className="w-full h-32"
           style={{
-            background: colors?.coverBackground 
-              ? `linear-gradient(135deg, ${colors.coverBackground}, ${colors?.accent || colors?.primary})`
-              : `linear-gradient(135deg, ${template?.colors?.accent || "#3b82f6"}, ${template?.colors?.primary || "#1f2937"})`,
+            background: `linear-gradient(135deg, ${template?.colors?.accent}, ${template?.colors?.primary})`,
           }}
         />
 
         {/* Avatar & Bio */}
         <div className="relative flex flex-col items-center mt-6 px-6">
-          <div 
-            className="w-24 h-24 rounded-full shadow-lg overflow-hidden bg-white/20 -mt-12"
-            style={{
-              border: `4px solid ${colors?.border || template?.colors?.border || "#ffffff"}`,
-            }}
-          >
+          <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white/20 -mt-12">
             {author.avatar && !avatarError ? (
               <img
                 src={author.avatar}
@@ -195,24 +181,21 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               </div>
             )}
           </div>
-
-          {/* ✅ NAME - FORCE WHITE WITH !important */}
           <h1
             className="mt-4 text-xl font-bold"
             style={{
               fontFamily: template?.fonts?.heading,
-              color: `${colors?.title || template?.colors?.title || "#FFFFFF"} !important`,
+              color: template?.colors?.text,
             }}
           >
             {author.displayName}
           </h1>
 
-          {/* BIO */}
           {author.bio && (
             <p
               className="text-sm text-center mt-1"
               style={{
-                color: colors?.description || template?.colors?.description || "#E5E5E5",
+                color: template?.colors?.secondary,
                 fontFamily: template?.fonts?.body,
               }}
             >
@@ -230,7 +213,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             <h2
               className="text-sm font-semibold uppercase"
               style={{
-                color: colors?.title || template?.colors?.title || "#FFFFFF",
+                color: template?.colors?.secondary,
                 fontFamily: template?.fonts?.heading,
               }}
             >
@@ -242,20 +225,20 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               <div
                 className="flex justify-between items-center rounded-lg p-3 text-sm"
                 style={{
-                  backgroundColor: `${colors?.primary || template?.colors?.primary || "#1f2937"}10`,
+                  backgroundColor: `${template?.colors?.primary}10`,
                   fontFamily: template?.fonts?.body,
                 }}
               >
                 <div
                   className="flex items-center gap-2"
-                  style={{ color: colors?.description || template?.colors?.description || "#E5E5E5" }}
+                  style={{ color: template?.colors?.text }}
                 >
-                  <Mail size={16} style={{ color: colors?.icon || template?.colors?.icon || template?.colors?.accent || "#FFD700" }} />
+                  <Mail size={16} style={{ color: template?.colors?.accent }} />{" "}
                   {author.email}
                 </div>
                 <button
                   className="hover:opacity-70"
-                  style={{ color: colors?.icon || template?.colors?.icon || template?.colors?.accent || "#FFD700" }}
+                  style={{ color: template?.colors?.secondary }}
                   onClick={() => navigator.clipboard.writeText(author.email!)}
                 >
                   <Copy size={16} />
@@ -268,12 +251,12 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               <div
                 className="flex items-center gap-2 rounded-lg p-3 text-sm"
                 style={{
-                  backgroundColor: `${colors?.primary || template?.colors?.primary || "#1f2937"}10`,
-                  color: colors?.description || template?.colors?.description || "#E5E5E5",
+                  backgroundColor: `${template?.colors?.primary}10`,
+                  color: template?.colors?.text,
                   fontFamily: template?.fonts?.body,
                 }}
               >
-                <Phone size={16} style={{ color: colors?.icon || template?.colors?.icon || template?.colors?.accent || "#FFD700" }} />
+                <Phone size={16} style={{ color: template?.colors?.accent }} />{" "}
                 {author.phone}
               </div>
             )}
@@ -286,12 +269,12 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-lg p-3 text-sm hover:opacity-80 transition"
                 style={{
-                  backgroundColor: `${colors?.primary || template?.colors?.primary || "#1f2937"}10`,
-                  color: colors?.description || template?.colors?.description || "#E5E5E5",
+                  backgroundColor: `${template?.colors?.primary}10`,
+                  color: template?.colors?.text,
                   fontFamily: template?.fonts?.body,
                 }}
               >
-                <Globe size={16} style={{ color: colors?.icon || template?.colors?.icon || template?.colors?.accent || "#FFD700" }} />
+                <Globe size={16} style={{ color: template?.colors?.accent }} />{" "}
                 {author.website}
               </a>
             )}
@@ -301,12 +284,12 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               <div
                 className="flex items-center gap-2 rounded-lg p-3 text-sm"
                 style={{
-                  backgroundColor: `${colors?.primary || template?.colors?.primary || "#1f2937"}10`,
-                  color: colors?.description || template?.colors?.description || "#E5E5E5",
+                  backgroundColor: `${template?.colors?.primary}10`,
+                  color: template?.colors?.text,
                   fontFamily: template?.fonts?.body,
                 }}
               >
-                <MapPin size={16} style={{ color: colors?.icon || template?.colors?.icon || template?.colors?.accent || "#FFD700" }} />
+                <MapPin size={16} style={{ color: template?.colors?.accent }} />{" "}
                 {author.location}
               </div>
             )}
@@ -319,7 +302,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             <h2
               className="text-sm font-semibold uppercase mb-3 w-auto"
               style={{
-                color: colors?.title || template?.colors?.title || "#FFFFFF",
+                color: template?.colors?.secondary,
                 fontFamily: template?.fonts?.heading,
               }}
             >
@@ -337,16 +320,16 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                     rel="noreferrer"
                     className={getSocialLinkClass()}
                     style={{
-                      backgroundColor: `${colors?.accent || template?.colors?.accent || "#3b82f6"}15`,
-                      color: colors?.description || template?.colors?.description || "#E5E5E5",
+                      backgroundColor: `${template?.colors?.accent}15`,
+                      color: template?.colors?.text,
                       fontFamily: template?.fonts?.body,
                     }}
                   >
-                    <span style={{ color: colors?.icon || template?.colors?.icon || template?.colors?.accent || "#FFD700" }}>
+                    <span style={{ color: template?.colors?.accent }}>
                       {icon}
                     </span>
                     <span
-                      className={`text-xs ${
+                      className={`text-xs   ${
                         template.social_style === "circles"
                           ? "hidden"
                           : "inline-block"
@@ -365,31 +348,31 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
         <div
           className="flex justify-around border-t p-4"
           style={{
-            backgroundColor: `${colors?.primary || template?.colors?.primary || "#1f2937"}08`,
-            borderColor: `${colors?.primary || template?.colors?.primary || "#1f2937"}20`,
+            backgroundColor: `${template?.colors?.primary}08`,
+            borderColor: `${template?.colors?.primary}20`,
             fontFamily: template?.fonts?.body,
           }}
         >
           <button
             onClick={() => setIsQRModalOpen(true)}
             className="flex flex-col items-center text-sm hover:opacity-70"
-            style={{ color: colors?.description || template?.colors?.description || "#E5E5E5" }}
+            style={{ color: template?.colors?.text }}
           >
             <QrCode
               className="w-5 h-5 mb-1"
-              style={{ color: colors?.icon || template?.colors?.icon || template?.colors?.accent || "#FFD700" }}
-            />
+              style={{ color: template?.colors?.accent }}
+            />{" "}
             QR Code
           </button>
           <button
             onClick={handleShare}
             className="flex flex-col items-center text-sm hover:opacity-70"
-            style={{ color: colors?.description || template?.colors?.description || "#E5E5E5" }}
+            style={{ color: template?.colors?.text }}
           >
             <Share2
               className="w-5 h-5 mb-1"
-              style={{ color: colors?.icon || template?.colors?.icon || template?.colors?.accent || "#FFD700" }}
-            />
+              style={{ color: template?.colors?.accent }}
+            />{" "}
             Share
           </button>
         </div>
