@@ -96,7 +96,8 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
       <div
         className="w-full max-w-lg shadow-lg rounded-2xl overflow-hidden flex flex-col"
         style={{
-          backgroundColor: template?.colors?.background,
+          // ✅ FIXED: Use white or light background for card, not the dark background color
+          backgroundColor: "#ffffff",
           fontFamily: template?.fonts?.body,
         }}
       >
@@ -104,13 +105,23 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
         <div
           className="w-full h-32"
           style={{
-            background: `linear-gradient(135deg, ${template?.colors?.accent}, ${template?.colors?.primary})`,
+            // ✅ FIXED: Use coverBackground instead of mixing accent + primary
+            background: template?.colors?.coverBackground || `linear-gradient(135deg, ${template?.colors?.accent}, ${template?.colors?.primary})`,
           }}
         />
 
         {/* Avatar & Bio */}
         <div className="relative flex flex-col items-center mt-6 px-6">
-          <div className="w-56 h-72 border-4 border-white shadow-lg overflow-hidden bg-white/20 -mt-16 flex items-center justify-center">
+          <div 
+            className="border-4 shadow-lg overflow-hidden bg-white/20 -mt-16 flex items-center justify-center"
+            style={{
+              // ✅ FIXED: Use profile size from template
+              width: `${template?.profile_size || 224}px`,
+              height: `${(template?.profile_size || 224) * 1.3}px`, // Keep the 1.3 ratio for portrait
+              borderColor: template?.colors?.border || "#ffffff",
+              borderRadius: template?.profile_shape === "rounded" ? "0.5rem" : "0",
+            }}
+          >
             {avatarUrl ? (
               <img
                 src={avatarUrl || user?.avatar_url}
@@ -125,8 +136,9 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           <h1
             className="mt-4 text-xl font-bold"
             style={{
-              fontFamily: template?.fonts?.heading,
-              color: template?.colors?.text,
+              fontFamily: template?.fonts?.heading || template?.fonts?.title,
+              // ✅ FIXED: Use title color from database
+              color: template?.colors?.title || "#000000",
             }}
           >
             {user?.display_name || user?.name || user?.username || "Anonymous"}
@@ -136,8 +148,9 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
             <p
               className="text-sm text-center mt-1"
               style={{
-                color: template?.colors?.secondary,
-                fontFamily: template?.fonts?.body,
+                // ✅ FIXED: Use description color from database
+                color: template?.colors?.description || "#6b7280",
+                fontFamily: template?.fonts?.body || template?.fonts?.description,
               }}
             >
               {user.profile.bio}
@@ -150,8 +163,9 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           <h2
             className="text-sm font-semibold uppercase"
             style={{
-              color: template?.colors?.secondary,
-              fontFamily: template?.fonts?.heading,
+              // ✅ FIXED: Use title color for section headers
+              color: template?.colors?.title || "#000000",
+              fontFamily: template?.fonts?.heading || template?.fonts?.title,
             }}
           >
             Contact
@@ -166,16 +180,19 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   className="flex justify-between items-center rounded-lg p-3 text-sm"
                   style={{
                     backgroundColor: `${template?.colors?.primary}10`,
-                    fontFamily: template?.fonts?.body,
+                    fontFamily: template?.fonts?.body || template?.fonts?.description,
                   }}
                 >
-                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
-                    <Mail size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
+                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ 
+                    // ✅ FIXED: Use description color for contact text
+                    color: template?.colors?.description || "#000000" 
+                  }}>
+                    <Mail size={16} className="flex-shrink-0" style={{ color: template?.colors?.icon || template?.colors?.accent }} />
                     <span className="truncate">{email.trim()}</span>
                   </div>
                   <button 
                     className="hover:opacity-70 ml-3 flex-shrink-0" 
-                    style={{ color: template?.colors?.secondary }} 
+                    style={{ color: template?.colors?.icon || template?.colors?.accent }} 
                     onClick={() => handleCopy(email.trim())}
                     aria-label={`Copy ${email.trim()}`}
                   >
@@ -195,16 +212,18 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   className="flex justify-between items-center rounded-lg p-3 text-sm"
                   style={{
                     backgroundColor: `${template?.colors?.primary}10`,
-                    fontFamily: template?.fonts?.body,
+                    fontFamily: template?.fonts?.body || template?.fonts?.description,
                   }}
                 >
-                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
-                    <Phone size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
+                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ 
+                    color: template?.colors?.description || "#000000" 
+                  }}>
+                    <Phone size={16} className="flex-shrink-0" style={{ color: template?.colors?.icon || template?.colors?.accent }} />
                     <span className="truncate">{phone.trim()}</span>
                   </div>
                   <button 
                     className="hover:opacity-70 ml-3 flex-shrink-0" 
-                    style={{ color: template?.colors?.secondary }} 
+                    style={{ color: template?.colors?.icon || template?.colors?.accent }} 
                     onClick={() => handleCopy(phone.trim())}
                     aria-label={`Copy ${phone.trim()}`}
                   >
@@ -224,11 +243,13 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   className="flex justify-between items-center rounded-lg p-3 text-sm"
                   style={{
                     backgroundColor: `${template?.colors?.primary}10`,
-                    fontFamily: template?.fonts?.body,
+                    fontFamily: template?.fonts?.body || template?.fonts?.description,
                   }}
                 >
-                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
-                    <Globe size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
+                  <div className="flex items-center gap-2 flex-1 min-w-0" style={{ 
+                    color: template?.colors?.description || "#000000" 
+                  }}>
+                    <Globe size={16} className="flex-shrink-0" style={{ color: template?.colors?.icon || template?.colors?.accent }} />
                     <a 
                       href={website.trim()} 
                       target="_blank" 
@@ -240,7 +261,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   </div>
                   <button 
                     className="hover:opacity-70 ml-3 flex-shrink-0" 
-                    style={{ color: template?.colors?.secondary }} 
+                    style={{ color: template?.colors?.icon || template?.colors?.accent }} 
                     onClick={() => handleCopy(website.trim())}
                     aria-label={`Copy ${website.trim()}`}
                   >
@@ -257,16 +278,18 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
               className="flex justify-between items-center rounded-lg p-3 text-sm"
               style={{
                 backgroundColor: `${template?.colors?.primary}10`,
-                fontFamily: template?.fonts?.body,
+                fontFamily: template?.fonts?.body || template?.fonts?.description,
               }}
             >
-              <div className="flex items-center gap-2 flex-1 min-w-0" style={{ color: template?.colors?.text }}>
-                <MapPin size={16} className="flex-shrink-0" style={{ color: template?.colors?.accent }} />
+              <div className="flex items-center gap-2 flex-1 min-w-0" style={{ 
+                color: template?.colors?.description || "#000000" 
+              }}>
+                <MapPin size={16} className="flex-shrink-0" style={{ color: template?.colors?.icon || template?.colors?.accent }} />
                 <span className="truncate">{user.profile.location}</span>
               </div>
               <button 
                 className="hover:opacity-70 ml-3 flex-shrink-0" 
-                style={{ color: template?.colors?.secondary }} 
+                style={{ color: template?.colors?.icon || template?.colors?.accent }} 
                 onClick={() => handleCopy(user.profile.location)}
                 aria-label={`Copy ${user.profile.location}`}
               >
@@ -282,8 +305,9 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
             <h2
               className="text-sm font-semibold uppercase mb-3"
               style={{
-                color: template?.colors?.secondary,
-                fontFamily: template?.fonts?.heading,
+                // ✅ FIXED: Use title color for section headers
+                color: template?.colors?.title || "#000000",
+                fontFamily: template?.fonts?.heading || template?.fonts?.title,
               }}
             >
               Connect with me
@@ -296,7 +320,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   const platformKey = link.platform?.toLowerCase()
                   const icon = socialIconMap[platformKey] || <Globe size={14} />
                   return (
-                    <a
+                    
                       key={link.id}
                       href={link.url}
                       target="_blank"
@@ -304,11 +328,12 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                       className="flex items-center gap-2 rounded-lg p-2 text-sm hover:opacity-80 transition"
                       style={{
                         backgroundColor: `${template?.colors?.accent}15`,
-                        color: template?.colors?.text,
-                        fontFamily: template?.fonts?.body,
+                        // ✅ FIXED: Use description color for social link text
+                        color: template?.colors?.description || "#000000",
+                        fontFamily: template?.fonts?.body || template?.fonts?.description,
                       }}
                     >
-                      <span style={{ color: template?.colors?.accent }}>{icon}</span>
+                      <span style={{ color: template?.colors?.icon || template?.colors?.accent }}>{icon}</span>
                       <span>{link.username}</span>
                     </a>
                   )
@@ -321,17 +346,20 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
         <div
           className="flex justify-around border-t p-4"
           style={{
-            backgroundColor: `${template?.colors?.primary}08`,
-            borderColor: `${template?.colors?.primary}20`,
-            fontFamily: template?.fonts?.body,
+            backgroundColor: `${template?.colors?.primary}10`,
+            borderColor: `${template?.colors?.border || template?.colors?.primary}20`,
+            fontFamily: template?.fonts?.body || template?.fonts?.description,
           }}
         >
           <button
             onClick={() => setIsQRModalOpen(true)}
             className="flex flex-col items-center text-sm hover:opacity-70"
-            style={{ color: template?.colors?.text }}
+            style={{ 
+              // ✅ FIXED: Use description color for button text
+              color: template?.colors?.description || "#000000" 
+            }}
           >
-            <QrCode className="w-5 h-5 mb-1" style={{ color: template?.colors?.accent }} /> QR Code
+            <QrCode className="w-5 h-5 mb-1" style={{ color: template?.colors?.icon || template?.colors?.accent }} /> QR Code
           </button>
 
           <button
@@ -343,9 +371,11 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
               })
             }
             className="flex flex-col items-center text-sm hover:opacity-70"
-            style={{ color: template?.colors?.text }}
+            style={{ 
+              color: template?.colors?.description || "#000000" 
+            }}
           >
-            <Share2 className="w-5 h-5 mb-1" style={{ color: template?.colors?.accent }} /> Share
+            <Share2 className="w-5 h-5 mb-1" style={{ color: template?.colors?.icon || template?.colors?.accent }} /> Share
           </button>
         </div>
       </div>
