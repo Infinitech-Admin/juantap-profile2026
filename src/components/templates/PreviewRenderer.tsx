@@ -312,7 +312,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   const platformKey = link.platform?.toLowerCase()
                   const icon = socialIconMap[platformKey] || <Globe size={14} />
                   return (
-                    
+                    <a
                       key={link.id}
                       href={link.url}
                       target="_blank"
