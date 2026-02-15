@@ -8,63 +8,30 @@ import { QRCodeSVG } from "qrcode.react"
 interface MinimalCleanProps {
   socialStyle?: "default" | "circles" | "fullblock" | string
   connectStyle?: "grid" | "list" | "compact" | string
-  // ✅ ADDED: Props for colors
-  colors?: {
-    primary: string
-    secondary: string
-    accent: string
-    background: string
-    text: string
-    line: string
-  }
-  // ✅ ADDED: Props for fonts
-  fonts?: {
-    heading: string
-    body: string
-  }
-  // ✅ ADDED: Props for profile data
-  profileData?: {
-    displayName: string
-    position: string
-    location: string
-    handle: string
-    bio: string
-    email: string
-    phone: string
-    website: string
-    socialLinks: Array<{
-      id: string
-      platform: string
-      username: string
-      url: string
-    }>
-  }
 }
 
 export function MinimalClean({
   socialStyle = "default",
   connectStyle = "grid",
-  // ✅ ADDED: Accept colors prop with defaults
-  colors = {
+}: MinimalCleanProps) {
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  // Fixed colors for pure black design
+  const colors = {
     primary: "#000000",
     secondary: "#6b7280",
     accent: "#ffffff",
     background: "#000000",
     text: "#ffffff",
     line: "#ffffff",
-  },
-  // ✅ ADDED: Accept fonts prop with defaults
-  fonts = {
+  }
+
+  const fonts = {
     heading: "Inter",
     body: "Inter",
-  },
-  // ✅ ADDED: Accept profileData prop
-  profileData,
-}: MinimalCleanProps) {
-  const [isQRModalOpen, setIsQRModalOpen] = useState(false)
-  const [copied, setCopied] = useState(false)
+  }
 
-  // ✅ MODIFIED: Use profileData if provided, otherwise use staticProfile
   const staticProfile = {
     displayName: "MICHAEL GARCIA",
     position: "POSITION HERE",
@@ -79,9 +46,6 @@ export function MinimalClean({
       { id: "facebook", platform: "facebook", username: "facebook_account", url: "https://facebook.com" },
     ],
   }
-
-  // ✅ ADDED: Use profileData if available, fallback to staticProfile
-  const profile = profileData || staticProfile
 
   const profileUrl = "https://example.com/michael-garcia"
 
@@ -190,8 +154,7 @@ export function MinimalClean({
               color: colors.text,
             }}
           >
-            {/* ✅ MODIFIED: Use profile instead of staticProfile */}
-            {profile.displayName}
+            {staticProfile.displayName}
           </h1>
         </div>
 
@@ -204,8 +167,7 @@ export function MinimalClean({
               color: colors.text,
             }}
           >
-            {/* ✅ MODIFIED: Use profile instead of staticProfile */}
-            {profile.position}
+            {staticProfile.position}
           </p>
         </div>
 
@@ -231,13 +193,12 @@ export function MinimalClean({
           >
             <div className="flex items-center gap-2 truncate" style={{ color: colors.text }}>
               <Mail size={14} className="sm:w-4 sm:h-4 flex-shrink-0" style={{ color: colors.accent }} />
-              {/* ✅ MODIFIED: Use profile instead of staticProfile */}
-              <span className="truncate">{profile.email}</span>
+              <span className="truncate">{staticProfile.email}</span>
             </div>
             <button
               className="hover:opacity-70 flex-shrink-0"
               style={{ color: colors.secondary }}
-              onClick={() => navigator.clipboard.writeText(profile.email)}
+              onClick={() => navigator.clipboard.writeText(staticProfile.email)}
             >
               <Copy size={14} className="sm:w-4 sm:h-4" />
             </button>
@@ -253,13 +214,12 @@ export function MinimalClean({
           >
             <div className="flex items-center gap-2 truncate" style={{ color: colors.text }}>
               <Mail size={14} className="sm:w-4 sm:h-4 flex-shrink-0" style={{ color: colors.accent }} />
-              {/* ✅ MODIFIED: Use profile instead of staticProfile */}
-              <span className="truncate">{profile.phone}</span>
+              <span className="truncate">{staticProfile.phone}</span>
             </div>
             <button
               className="hover:opacity-70 flex-shrink-0"
               style={{ color: colors.secondary }}
-              onClick={() => navigator.clipboard.writeText(profile.phone)}
+              onClick={() => navigator.clipboard.writeText(staticProfile.phone)}
             >
               <Copy size={14} className="sm:w-4 sm:h-4" />
             </button>
@@ -275,20 +235,19 @@ export function MinimalClean({
           >
             <div className="flex items-center gap-2 truncate" style={{ color: colors.text }}>
               <Globe size={14} className="sm:w-4 sm:h-4 flex-shrink-0" style={{ color: colors.accent }} />
-              
-                href={`https://${profile.website}`}
+              <a
+                href={`https://${staticProfile.website}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="truncate underline hover:opacity-70"
               >
-                {/* ✅ MODIFIED: Use profile instead of staticProfile */}
-                {profile.website}
+                {staticProfile.website}
               </a>
             </div>
             <button
               className="hover:opacity-70 flex-shrink-0"
               style={{ color: colors.secondary }}
-              onClick={() => navigator.clipboard.writeText(profile.website)}
+              onClick={() => navigator.clipboard.writeText(staticProfile.website)}
             >
               <Copy size={14} className="sm:w-4 sm:h-4" />
             </button>
@@ -313,12 +272,11 @@ export function MinimalClean({
 
           {/* Social Icons (Right of QR) - Arranged Vertically */}
           <div className="flex flex-col gap-2 items-center justify-center flex-shrink-0">
-            {/* ✅ MODIFIED: Use profile instead of staticProfile */}
-            {profile.socialLinks.map((link) => {
+            {staticProfile.socialLinks.map((link) => {
               const platformKey = link.platform.toLowerCase()
               const icon = socialIconMap[platformKey] || <Globe size={14} />
               return (
-                
+                <a
                   key={link.id}
                   href={link.url}
                   target="_blank"
