@@ -5,7 +5,7 @@ import React from "react";
 
 // Import template components
 import { PreviewRenderer } from "@/components/templates/PreviewRenderer";
-import { MinimalClean } from "@/components/templates/minimal-clean";
+import { MinimalClean } from "@/components/template-previews/minimal-clean";
 // Add more template imports as you create them
 
 export interface Template {
