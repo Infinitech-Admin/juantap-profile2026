@@ -96,7 +96,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
       <div
         className="w-full max-w-lg shadow-lg rounded-2xl overflow-hidden flex flex-col"
         style={{
-          // ✅ FIXED: Use background color from database
           backgroundColor: template?.colors?.background || "#ffffff",
           fontFamily: template?.fonts?.body,
         }}
@@ -105,7 +104,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
         <div
           className="w-full h-32"
           style={{
-            // ✅ FIXED: Use coverBackground instead of mixing accent + primary
             background: template?.colors?.coverBackground || `linear-gradient(135deg, ${template?.colors?.accent}, ${template?.colors?.primary})`,
           }}
         />
@@ -115,9 +113,8 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           <div 
             className="border-4 shadow-lg overflow-hidden bg-white/20 -mt-16 flex items-center justify-center"
             style={{
-              // ✅ FIXED: Use profile size from template
               width: `${template?.profile_size || 224}px`,
-              height: `${(template?.profile_size || 224) * 1.3}px`, // Keep the 1.3 ratio for portrait
+              height: `${(template?.profile_size || 224) * 1.3}px`,
               borderColor: template?.colors?.border || "#ffffff",
               borderRadius: template?.profile_shape === "rounded" ? "0.5rem" : "0",
             }}
@@ -137,7 +134,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
             className="mt-4 text-xl font-bold"
             style={{
               fontFamily: template?.fonts?.heading || template?.fonts?.title,
-              // ✅ FIXED: Use title color from database
               color: template?.colors?.title || "#000000",
             }}
           >
@@ -148,7 +144,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
             <p
               className="text-sm text-center mt-1"
               style={{
-                // ✅ FIXED: Use description color from database
                 color: template?.colors?.description || "#6b7280",
                 fontFamily: template?.fonts?.body || template?.fonts?.description,
               }}
@@ -163,7 +158,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
           <h2
             className="text-sm font-semibold uppercase"
             style={{
-              // ✅ FIXED: Use title color for section headers
               color: template?.colors?.title || "#000000",
               fontFamily: template?.fonts?.heading || template?.fonts?.title,
             }}
@@ -184,7 +178,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   }}
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0" style={{ 
-                    // ✅ FIXED: Use description color for contact text
                     color: template?.colors?.description || "#000000" 
                   }}>
                     <Mail size={16} className="flex-shrink-0" style={{ color: template?.colors?.icon || template?.colors?.accent }} />
@@ -305,7 +298,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
             <h2
               className="text-sm font-semibold uppercase mb-3"
               style={{
-                // ✅ FIXED: Use title color for section headers
                 color: template?.colors?.title || "#000000",
                 fontFamily: template?.fonts?.heading || template?.fonts?.title,
               }}
@@ -328,7 +320,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                       className="flex items-center gap-2 rounded-lg p-2 text-sm hover:opacity-80 transition"
                       style={{
                         backgroundColor: `${template?.colors?.accent}15`,
-                        // ✅ FIXED: Use description color for social link text
                         color: template?.colors?.description || "#000000",
                         fontFamily: template?.fonts?.body || template?.fonts?.description,
                       }}
@@ -355,7 +346,6 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
             onClick={() => setIsQRModalOpen(true)}
             className="flex flex-col items-center text-sm hover:opacity-70"
             style={{ 
-              // ✅ FIXED: Use description color for button text
               color: template?.colors?.description || "#000000" 
             }}
           >
