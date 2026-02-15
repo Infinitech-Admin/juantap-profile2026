@@ -99,7 +99,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
 
   // Check if we should show the Certificate of Legitimacy link
   const showCertificate = user?.username?.toLowerCase() === "arnldacra"
-  const certificateUrl = "https://drive.google.com/drive/folders/1rpo9uI2S67f7jXptPF32pl7NvYkTiIFZ" // Or your certificate image URL
+  const certificateUrl = "https://drive.google.com/file/d/1vdvCwRWZJyJSLnZ0YE9KZ4dsc72-0tg-/view?usp=drive_link" // Or your certificate image URL
 
   return (
     <div className="w-full flex justify-center p-5" style={{ backgroundColor: "#f9fafb" }}>
