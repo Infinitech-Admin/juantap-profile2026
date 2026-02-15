@@ -91,6 +91,11 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
 
   const avatarUrl = user?.avatar_url || null
 
+  // Split bio by comma and filter out empty strings
+  const bioItems = user?.profile?.bio 
+    ? user.profile.bio.split(',').map(item => item.trim()).filter(item => item.length > 0)
+    : []
+
   return (
     <div className="w-full flex justify-center p-5" style={{ backgroundColor: "#f9fafb" }}>
       <div
@@ -140,16 +145,21 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
             {user?.display_name || user?.name || user?.username || "Anonymous"}
           </h1>
 
-          {user?.profile?.bio && (
-            <p
-              className="text-sm text-center mt-1"
-              style={{
-                color: template?.colors?.description || "#6b7280",
-                fontFamily: template?.fonts?.body || template?.fonts?.description,
-              }}
-            >
-              {user.profile.bio}
-            </p>
+          {bioItems.length > 0 && (
+            <div className="mt-2 w-full max-w-md">
+              {bioItems.map((item, index) => (
+                <p
+                  key={index}
+                  className="text-sm text-center mt-1"
+                  style={{
+                    color: template?.colors?.description || "#6b7280",
+                    fontFamily: template?.fonts?.body || template?.fonts?.description,
+                  }}
+                >
+                  {item}
+                </p>
+              ))}
+            </div>
           )}
         </div>
 
