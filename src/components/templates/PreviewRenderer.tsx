@@ -96,8 +96,8 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
       <div
         className="w-full max-w-lg shadow-lg rounded-2xl overflow-hidden flex flex-col"
         style={{
-          // ✅ FIXED: Use white or light background for card, not the dark background color
-          backgroundColor: "#ffffff",
+          // ✅ FIXED: Use background color from database
+          backgroundColor: template?.colors?.background || "#ffffff",
           fontFamily: template?.fonts?.body,
         }}
       >
@@ -320,7 +320,7 @@ export const PreviewRenderer: React.FC<PreviewRendererProps> = ({ template, user
                   const platformKey = link.platform?.toLowerCase()
                   const icon = socialIconMap[platformKey] || <Globe size={14} />
                   return (
-                    <a
+                    
                       key={link.id}
                       href={link.url}
                       target="_blank"
