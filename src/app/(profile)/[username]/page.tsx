@@ -1,9 +1,7 @@
 "use client";
-
 import { useParams, notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PreviewRenderer } from "@/components/templates/PreviewRenderer";
-// ✅ Import your custom Loading component
 import { Loading } from "@/components/loading";
 import type { Template } from "@/types/template";
 
@@ -63,9 +61,10 @@ export default function PublicProfilePage() {
       const user = userRes.ok ? await userRes.json() : null;
 
       let finalTemplate: Template | null = null;
+
       if (usedTemplates?.length) {
         const t = usedTemplates[0];
-
+        
         // fetch full template details
         const fullTemplateRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/templates/${t.slug}`
@@ -74,15 +73,47 @@ export default function PublicProfilePage() {
           ? await fullTemplateRes.json()
           : null;
 
+        // 🔍 DEBUG: Check what colors are being returned
+        console.log("Full Template from API:", fullTemplate);
+        console.log("Colors from template:", fullTemplate?.colors);
+        console.log("Type of colors:", typeof fullTemplate?.colors);
+
+        // ✅ FIX: Parse colors if it's a JSON string
+        let parsedColors = fullTemplate?.colors;
+        if (typeof parsedColors === 'string') {
+          try {
+            parsedColors = JSON.parse(parsedColors);
+            console.log("Parsed colors:", parsedColors);
+          } catch (e) {
+            console.error("Failed to parse colors:", e);
+          }
+        }
+
+        // ✅ FIX: Parse fonts if it's a JSON string
+        let parsedFonts = fullTemplate?.fonts;
+        if (typeof parsedFonts === 'string') {
+          try {
+            parsedFonts = JSON.parse(parsedFonts);
+            console.log("Parsed fonts:", parsedFonts);
+          } catch (e) {
+            console.error("Failed to parse fonts:", e);
+          }
+        }
+
         finalTemplate = {
           ...fullTemplate,
+          colors: parsedColors, // ✅ Use parsed version
+          fonts: parsedFonts,   // ✅ Use parsed version
           thumbnail_url: fullTemplate?.thumbnail_url
             ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${fullTemplate.thumbnail_url}`
             : "/placeholder.svg",
         };
+
+        console.log("Final Template being passed to PreviewRenderer:", finalTemplate);
       }
 
-      setTemplateData(finalTemplate); 
+      setTemplateData(finalTemplate);
+
       if (user) {
         setUserData({
           ...user,
@@ -102,10 +133,11 @@ export default function PublicProfilePage() {
 
       setLoading(false);
     }
+
     fetchData();
   }, [username]);
 
-  if (loading) return <Loading />; // ✅ Use custom Loading component
+  if (loading) return <Loading />;
   if (!templateData) return notFound();
 
   return (
@@ -118,5 +150,5 @@ export default function PublicProfilePage() {
         />
       )}
     </main>
-  ); 
+  );
 }
