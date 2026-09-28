@@ -213,68 +213,13 @@ export const Infinitech: React.FC<InfinitechProps> = ({ user }) => {
           fontFamily: FONT,
         }}
       >
-        {/* ---------- Artwork: top (logo + left hexagons) ---------- */}
+        {/* ---------- Artwork: top-left hexagons ---------- */}
         <svg
           viewBox="0 0 632 380"
           className="absolute top-0 left-0 w-full pointer-events-none"
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
         >
-          <defs>
-            <linearGradient
-              id="inf-grad"
-              gradientUnits="userSpaceOnUse"
-              x1="217"
-              y1="0"
-              x2="407"
-              y2="0"
-            >
-              <stop offset="0" stopColor="#2f7be0" />
-              <stop offset="0.5" stopColor="#1d4fa8" />
-              <stop offset="1" stopColor="#0b2a5c" />
-            </linearGradient>
-          </defs>
-
-          <path
-            d="M312,66 C290,22 226,30 226,66 C226,102 290,110 312,66 C334,22 398,30 398,66 C398,102 334,110 312,66 Z"
-            fill="none"
-            stroke="url(#inf-grad)"
-            strokeWidth="17"
-            strokeLinejoin="round"
-          />
-          <line
-            x1="296"
-            y1="98"
-            x2="328"
-            y2="34"
-            stroke="#fff"
-            strokeWidth="4"
-          />
-          <text
-            x="312"
-            y="140"
-            textAnchor="middle"
-            fontSize="17"
-            fontWeight="600"
-            letterSpacing="7"
-            fill={NAVY}
-            style={{ fontFamily: FONT }}
-          >
-            INFINITECH
-          </text>
-          <text
-            x="312"
-            y="152"
-            textAnchor="middle"
-            fontSize="8"
-            fontWeight="600"
-            letterSpacing="2.4"
-            fill={NAVY}
-            style={{ fontFamily: FONT }}
-          >
-            ADVERTISING CORPORATION
-          </text>
-
           <g fill="none" strokeWidth="2.2">
             <polygon points={hex(12, 192, 19)} stroke={TEAL} />
             <polygon points={hex(48, 262, 19)} stroke={TEAL} strokeWidth="3" />
@@ -299,6 +244,14 @@ export const Infinitech: React.FC<InfinitechProps> = ({ user }) => {
           <circle cx="58" cy="181" r="3" fill={CYAN} />
           <circle cx="66" cy="240" r="2" fill={CYAN} />
         </svg>
+
+        {/* ---------- Logo (PNG, may name na) ---------- */}
+        <img
+          src="/infinitech-logo.png"
+          alt="Infinitech Advertising Corporation"
+          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{ top: "3cqw", width: "40cqw", height: "auto" }}
+        />
 
         {/* ---------- Artwork: right hexagon cluster (behind content) ---------- */}
         <svg
@@ -344,7 +297,7 @@ export const Infinitech: React.FC<InfinitechProps> = ({ user }) => {
         <div
           className="relative flex flex-col items-center flex-1"
           style={{
-            paddingTop: "27cqw",
+            paddingTop: "38cqw", // dating 27cqw
             fontSize: "max(12px, 2.6cqw)",
             lineHeight: 1.4,
           }}
