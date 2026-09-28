@@ -7,6 +7,7 @@ import { TemplatePreviewHeader } from "@/components/templates/template-preview-h
 import { TemplatePreviewContent } from "@/components/templates/template-preview-content";
 import { TemplatePreviewSidebar } from "@/components/templates/template-preview-sidebar";
 import { Loading } from "@/components/loading";
+import { getPreviewComponent } from "@/lib/template-data"; // NEW
 
 interface SocialLink {
   id: string;
@@ -62,7 +63,7 @@ interface TemplateData {
   [key: string]: unknown; // instead of any
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL as string; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL as string;
 
 const defaultColors = {
   primary: "#1f2937",
@@ -70,7 +71,7 @@ const defaultColors = {
   accent: "#3b82f6",
   background: "#ffffff",
   text: "#111827",
-}; 
+};
 
 const defaultFonts = {
   heading: "Inter",
@@ -106,7 +107,7 @@ export default function TemplatePage({ params }: Props) {
   useEffect(() => {
     const fetchTemplate = async () => {
       try {
-        const token = localStorage.getItem("token"); 
+        const token = localStorage.getItem("token");
         const res = await fetch(`${API_URL}/templates/${slug}`, {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
@@ -115,10 +116,12 @@ export default function TemplatePage({ params }: Props) {
         });
 
         if (!res.ok) throw new Error("Template not found");
-        const data = await res.json(); 
+        const data = await res.json();
 
         setTemplate({
           ...data,
+          // NEW: attach the component mapped to this slug (e.g. Infinitech)
+          previewComponent: getPreviewComponent(data.slug ?? slug),
           colors: {
             primary: data.colors?.primary ?? defaultColors.primary,
             secondary: data.colors?.secondary ?? defaultColors.secondary,
@@ -147,7 +150,7 @@ export default function TemplatePage({ params }: Props) {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) return; 
+        if (!token) return;
 
         const res = await fetch(`${API_URL}/user-profile`, {
           headers: {
@@ -157,7 +160,7 @@ export default function TemplatePage({ params }: Props) {
         });
 
         if (!res.ok) throw new Error("Failed to fetch user");
-        const data = await res.json(); 
+        const data = await res.json();
 
         setUser({
           id: data.id,
@@ -190,18 +193,17 @@ export default function TemplatePage({ params }: Props) {
   if (!template) {
     return (
       <div className="p-6 text-center text-gray-600">Template not found.</div>
-    ); 
+    );
   }
 
   return (
     <>
       <header className="w-full bg-gray-50 px-6 py-4 shadow-sm">
-        <TemplatePreviewHeader template={template} />
+        <TemplatePreviewHeader template={template as any} />
       </header>
 
       {/* Background wrapper with gradient + orbs */}
       <div className="min-h-screen relative bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 overflow-hidden">
- 
         {/* Animated orbs */}
         <div className="absolute inset-0 opacity-30 pointer-events-none">
           <div className="absolute top-10 left-10 w-2 h-2 bg-gray-800 rounded-full animate-pulse"></div>
@@ -218,17 +220,17 @@ export default function TemplatePage({ params }: Props) {
         {/* Main content */}
         <div className="flex flex-col lg:flex-row gap-6 p-6 relative z-10">
           <main className="flex-1">
-            <TemplateCard template={template} user={user} slug={slug} /> 
+            <TemplateCard template={template as any} user={user} slug={slug} />
             <div className="container mx-auto px-4 py-10">
-              <TemplatePreviewContent template={template} />
+              <TemplatePreviewContent template={template as any} />
             </div>
           </main>
 
           <aside className="w-full lg:w-80">
-            <TemplatePreviewSidebar template={template} />
+            <TemplatePreviewSidebar template={template as any} />
           </aside>
         </div>
       </div>
     </>
-  ); 
+  );
 }

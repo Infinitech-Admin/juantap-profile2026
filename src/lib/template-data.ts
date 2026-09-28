@@ -6,6 +6,7 @@ import React from "react";
 // Import template components
 import { PreviewRenderer } from "@/components/templates/PreviewRenderer";
 import { MinimalClean } from "@/components/template-previews/minimal-clean";
+import { Infinitech } from "@/components/template-previews/infinitech";
 // Add more template imports as you create them
 
 export interface Template {
@@ -43,25 +44,36 @@ export interface Template {
   isNew?: boolean;
   isPopular: boolean;
   createdAt?: string;
-  
-  // ✅ ADD THIS: For component mapping
+
+  // For component mapping
   previewComponent?: React.ComponentType<any>;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 const IMAGE_URL = process.env.NEXT_PUBLIC_IMAGE_URL!;
-const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL!; 
+const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL!;
 
-// ✅ Map template slugs to their React components
+// Map template slugs to their React components
 const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "brotherhood-legacy": PreviewRenderer,
   "minimal-clean": MinimalClean,
+  infinitech: Infinitech, // must match the slug in your database
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,
 };
 
-// ✅ Fetch templates (authenticated if token exists)
+// Get the preview component for a slug (use this in pages that fetch templates on their own)
+export const getPreviewComponent = (slug: string): React.ComponentType<any> =>
+  TEMPLATE_COMPONENTS[slug] || PreviewRenderer;
+
+// Attach the preview component to a template based on its slug
+const withComponent = (tpl: Template): Template => ({
+  ...tpl,
+  previewComponent: TEMPLATE_COMPONENTS[tpl.slug] || PreviewRenderer,
+});
+
+// Fetch templates (authenticated if token exists)
 export async function fetchTemplates(): Promise<Template[]> {
   try {
     const token =
@@ -73,64 +85,48 @@ export async function fetchTemplates(): Promise<Template[]> {
 
     // Adjust this depending on backend response
     const templates = response.data.templates ?? response.data;
-    
-    // ✅ Add components to templates
-    return templates.map((tpl: Template) => ({
-      ...tpl,
-      previewComponent: TEMPLATE_COMPONENTS[tpl.slug] || PreviewRenderer,
-    }));
+
+    return templates.map(withComponent);
   } catch (error) {
     console.error("Error fetching templates:", error);
-    return []; 
+    return [];
   }
 }
 
-// ✅ Fetch all templates (no auth)
+// Fetch all templates (no auth)
 export async function getAllTemplates(): Promise<Template[]> {
   const res = await fetch(`${API_URL}/templates`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch templates");
   const data = await res.json();
   const templates = data.templates ?? data;
-  
-  // ✅ Add components to templates
-  return templates.map((tpl: Template) => ({
-    ...tpl,
-    previewComponent: TEMPLATE_COMPONENTS[tpl.slug] || PreviewRenderer,
-  }));
+
+  return templates.map(withComponent);
 }
 
-// ✅ Fetch template by slug
+// Fetch template by slug
 export async function getTemplateBySlug(slug: string): Promise<Template> {
   const res = await fetch(`${API_URL}/templates/${slug}`, {
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Template not found");
   const data = await res.json();
-  
-  // ✅ Add component to template
-  return {
-    ...data,
-    previewComponent: TEMPLATE_COMPONENTS[data.slug] || PreviewRenderer,
-  };
+
+  return withComponent(data);
 }
 
-// ✅ Fetch template by ID
+// Fetch template by ID
 export async function getTemplateById(id: string): Promise<Template> {
   const res = await fetch(`${API_URL}/templates/${id}`, { cache: "no-store" });
   if (!res.ok) throw new Error("Template not found");
   const data = await res.json();
-  
-  // ✅ Add component to template
-  return {
-    ...data,
-    previewComponent: TEMPLATE_COMPONENTS[data.slug] || PreviewRenderer,
-  };
+
+  return withComponent(data);
 }
 
-// ✅ Get current user (with profile + socials, normalized avatar URL)
+// Get current user (with profile + socials, normalized avatar URL)
 export async function getCurrentUser(): Promise<User | null> {
   const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null; 
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (!token) return null;
 
   try {
@@ -146,7 +142,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
     const data = await res.json();
 
-    // ✅ Normalize avatar URL
+    // Normalize avatar URL
     let avatarUrl = "/default-avatar.png";
     if (data.profile_image) {
       const cleanPath = data.profile_image.replace(/^storage\//, "");
@@ -177,7 +173,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export async function getUserTemplatesWithStatus(): Promise<Template[]> {
   const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null; 
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (!token) return [];
 
   try {
@@ -190,15 +186,11 @@ export async function getUserTemplatesWithStatus(): Promise<Template[]> {
     });
 
     if (!res.ok)
-      throw new Error("Failed to fetch user's templates with status"); 
+      throw new Error("Failed to fetch user's templates with status");
 
     const templates = await res.json();
-    
-    // ✅ Add components to templates
-    return templates.map((tpl: Template) => ({
-      ...tpl,
-      previewComponent: TEMPLATE_COMPONENTS[tpl.slug] || PreviewRenderer,
-    }));
+
+    return templates.map(withComponent);
   } catch (err) {
     console.error("Error fetching templates with status:", err);
     return [];
@@ -220,10 +212,9 @@ export async function fetchTemplatesWithStats(): Promise<Template[]> {
     const stats: any[] = await statsRes.json();
 
     return templates.map((tpl) => {
-      const stat = stats.find((s) => s.id === tpl.id); 
+      const stat = stats.find((s) => s.id === tpl.id);
       return {
-        ...tpl,
-        previewComponent: TEMPLATE_COMPONENTS[tpl.slug] || PreviewRenderer,
+        ...withComponent(tpl),
         unlocks: stat?.unlocks ?? 0,
         saves: stat?.saves ?? 0,
         revenue: stat?.revenue ?? 0,
@@ -231,7 +222,7 @@ export async function fetchTemplatesWithStats(): Promise<Template[]> {
     });
   } catch (err) {
     console.error("Error fetching templates with stats:", err);
-    return []; 
+    return [];
   }
 }
 
@@ -239,7 +230,7 @@ export async function fetchTemplatesWithStats(): Promise<Template[]> {
 export async function getSavedTemplates(): Promise<Template[]> {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  if (!token) return []; 
+  if (!token) return [];
 
   try {
     const res = await fetch(`${API_URL}/templates1/saved`, {
@@ -254,15 +245,11 @@ export async function getSavedTemplates(): Promise<Template[]> {
 
     const data = await res.json();
     const templates = Array.isArray(data) ? data : [];
-    
-    // ✅ Add components to templates
-    return templates.map((tpl: Template) => ({
-      ...tpl,
-      previewComponent: TEMPLATE_COMPONENTS[tpl.slug] || PreviewRenderer,
-    }));
+
+    return templates.map(withComponent);
   } catch (err) {
     console.error("Error fetching saved templates:", err);
-    return []; 
+    return [];
   }
 }
 
@@ -270,7 +257,7 @@ export async function getSavedTemplates(): Promise<Template[]> {
 export async function getBoughtTemplates(): Promise<Template[]> {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  if (!token) return []; 
+  if (!token) return [];
 
   try {
     const res = await fetch(`${API_URL}/templates1/boughted`, {
@@ -285,17 +272,13 @@ export async function getBoughtTemplates(): Promise<Template[]> {
 
     const data = await res.json();
     const templates = Array.isArray(data?.data) ? data.data : [];
-    
-    // ✅ Add components to templates
-    return templates.map((tpl: Template) => ({
-      ...tpl,
-      previewComponent: TEMPLATE_COMPONENTS[tpl.slug] || PreviewRenderer,
-    }));
+
+    return templates.map(withComponent);
   } catch (err) {
     console.error("Error fetching bought templates:", err);
-    return []; 
+    return [];
   }
 }
 
-// ✅ Export constants (in case you need them in components)
+// Export constants (in case you need them in components)
 export { API_URL, IMAGE_URL, FRONTEND_URL };

@@ -1,8 +1,8 @@
 "use client";
 import { useParams, notFound } from "next/navigation";
 import { useEffect, useState } from "react";
-import { PreviewRenderer } from "@/components/templates/PreviewRenderer";
 import { Loading } from "@/components/loading";
+import { getPreviewComponent } from "@/lib/template-data"; // NEW (replaces PreviewRenderer import)
 import type { Template } from "@/types/template";
 
 interface SocialLink {
@@ -51,12 +51,12 @@ export default function PublicProfilePage() {
   useEffect(() => {
     async function fetchData() {
       const templateRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/profile/${username}/used-templates`
+        `${process.env.NEXT_PUBLIC_API_URL}/profile/${username}/used-templates`,
       );
       const usedTemplates = templateRes.ok ? await templateRes.json() : [];
 
       const userRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/profile/${username}`
+        `${process.env.NEXT_PUBLIC_API_URL}/profile/${username}`,
       );
       const user = userRes.ok ? await userRes.json() : null;
 
@@ -64,37 +64,30 @@ export default function PublicProfilePage() {
 
       if (usedTemplates?.length) {
         const t = usedTemplates[0];
-        
+
         // fetch full template details
         const fullTemplateRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/templates/${t.slug}`
+          `${process.env.NEXT_PUBLIC_API_URL}/templates/${t.slug}`,
         );
         const fullTemplate = fullTemplateRes.ok
           ? await fullTemplateRes.json()
           : null;
 
-        // 🔍 DEBUG: Check what colors are being returned
-        console.log("Full Template from API:", fullTemplate);
-        console.log("Colors from template:", fullTemplate?.colors);
-        console.log("Type of colors:", typeof fullTemplate?.colors);
-
-        // ✅ FIX: Parse colors if it's a JSON string
+        // Parse colors if it's a JSON string
         let parsedColors = fullTemplate?.colors;
-        if (typeof parsedColors === 'string') {
+        if (typeof parsedColors === "string") {
           try {
             parsedColors = JSON.parse(parsedColors);
-            console.log("Parsed colors:", parsedColors);
           } catch (e) {
             console.error("Failed to parse colors:", e);
           }
         }
 
-        // ✅ FIX: Parse fonts if it's a JSON string
+        // Parse fonts if it's a JSON string
         let parsedFonts = fullTemplate?.fonts;
-        if (typeof parsedFonts === 'string') {
+        if (typeof parsedFonts === "string") {
           try {
             parsedFonts = JSON.parse(parsedFonts);
-            console.log("Parsed fonts:", parsedFonts);
           } catch (e) {
             console.error("Failed to parse fonts:", e);
           }
@@ -102,14 +95,12 @@ export default function PublicProfilePage() {
 
         finalTemplate = {
           ...fullTemplate,
-          colors: parsedColors, // ✅ Use parsed version
-          fonts: parsedFonts,   // ✅ Use parsed version
+          colors: parsedColors,
+          fonts: parsedFonts,
           thumbnail_url: fullTemplate?.thumbnail_url
             ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${fullTemplate.thumbnail_url}`
             : "/placeholder.svg",
         };
-
-        console.log("Final Template being passed to PreviewRenderer:", finalTemplate);
       }
 
       setTemplateData(finalTemplate);
@@ -126,7 +117,7 @@ export default function PublicProfilePage() {
                 acc[link.platform.toLowerCase()] = link.url;
                 return acc;
               },
-              {}
+              {},
             ) ?? {},
         });
       }
@@ -140,10 +131,14 @@ export default function PublicProfilePage() {
   if (loading) return <Loading />;
   if (!templateData) return notFound();
 
+  // NEW: pick the component mapped to this template's slug (Infinitech, MinimalClean, ...)
+  // Falls back to PreviewRenderer for templates that have no custom component.
+  const PreviewComponent = getPreviewComponent(templateData.slug);
+
   return (
     <main className="flex-1">
       {templateData && userData && (
-        <PreviewRenderer
+        <PreviewComponent
           template={templateData}
           user={userData}
           slug={templateData.slug}

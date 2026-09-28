@@ -5,24 +5,34 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Crown, Eye, Star, User as UserIcon, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { PreviewRenderer } from "@/components/templates/PreviewRenderer";
 import type { Template, User } from "@/types/template";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface TemplateCardProps {
-  template: Template; 
+  template: Template;
   user?: User;
 }
 
+// Templates whose artwork is not 3:4 (keeps the full design visible in the card)
+const PREVIEW_ASPECT: Record<string, string> = {
+  infinitech: "aspect-[632/957]",
+};
+
 export function TemplateCard({ template, user }: TemplateCardProps) {
   const router = useRouter();
- 
+
   const isPremium = template.category === "premium";
   const hasDiscount = !!(template.original_price && template.discount);
   const [showRealPreview, setShowRealPreview] = useState(false);
   const [loadingPreview, setLoadingPreview] = useState(false);
+
+  // Use the component mapped to this template's slug (falls back to PreviewRenderer)
+  const Preview: ComponentType<any> =
+    template.previewComponent || PreviewRenderer;
+  const previewAspect = PREVIEW_ASPECT[template.slug] || "aspect-[3/4]";
 
   const handlePreviewClick = () => {
     setLoadingPreview(true);
@@ -35,25 +45,22 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
     }, 800);
     return () => clearTimeout(timeout);
   }, []);
+
   return (
     <Card className="group flex  flex-1 hover:shadow-xl transition-all duration-300 border-0 shadow-lg overflow-hidden">
       <div className="relative w-full h-full">
         {/* Template Preview or Thumbnail */}
-        <div className="aspect-[3/4] bg-gray-100 overflow-hidden">
+        <div className={`${previewAspect} bg-gray-100 overflow-hidden`}>
           {showRealPreview ? (
-            <PreviewRenderer
-              template={template}
-              user={user}
-              slug={template.slug}
-            />
+            <Preview template={template} user={user} slug={template.slug} />
           ) : (
             <img
-              src={template.thumbnail || "/placeholder.svg"}
+              src={template.thumbnail_url || "/placeholder.svg"}
               alt={template.name}
               className="w-full h-full object-cover blur-sm scale-105"
             />
           )}
-        </div> 
+        </div>
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
@@ -64,7 +71,7 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
             </Badge>
           )}
 
-          {template.isNew && (
+          {template.is_new && (
             <Badge
               variant="secondary"
               className="p-1.5 rounded-lg bg-green-100 text-green-700 border-green-200"
@@ -74,12 +81,12 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
             </Badge>
           )}
 
-          {template.isPopular && (
+          {template.is_popular && (
             <Badge
               variant="secondary"
               className="p-1.5 rounded-lg bg-yellow-100 text-yellow-700 border-yellow-200"
             >
-              <Star className="w-5 h-5 mr-1" /> 
+              <Star className="w-5 h-5 mr-1" />
               Popular
             </Badge>
           )}
@@ -88,7 +95,10 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
         {/* Discount Badge */}
         {isPremium && hasDiscount && (
           <div className="absolute top-3 right-3">
-            <Badge variant="destructive" className="p-1.5 rounded-xl bg-red-500"> 
+            <Badge
+              variant="destructive"
+              className="p-1.5 rounded-xl bg-red-500"
+            >
               -{template.discount}%
             </Badge>
           </div>
@@ -115,7 +125,7 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
         </div>
       </div>
 
-      <CardContent className="w-full h-full "> 
+      <CardContent className="w-full h-full ">
         <div className="flex items-start justify-between mb-2">
           <h3 className="font-semibold text-lg text-gray-900 group-hover:text-purple-600 transition-colors">
             {template.name}
@@ -127,8 +137,12 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
         </p>
 
         <div className="flex flex-wrap gap-1 mb-3">
-          {template.tags?.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="outline" className="p-1.5 rounded-lg text-xs"> 
+          {template.tags?.slice(0, 3).map((tag: string) => (
+            <Badge
+              key={tag}
+              variant="outline"
+              className="p-1.5 rounded-lg text-xs"
+            >
               {tag}
             </Badge>
           ))}
@@ -137,9 +151,9 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
 
       <CardFooter className="p-4 pt-0">
         <div className="flex items-center justify-between w-full">
-          {/* 👤 Author Info */}
+          {/* Author Info */}
           <div className="flex items-center gap-2">
-            {user?.avatar_url ? ( 
+            {user?.avatar_url ? (
               <img
                 src={user?.avatar_url}
                 alt={user?.name || "Author"}
@@ -154,7 +168,7 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
             )}
           </div>
 
-          {/* 📊 Price + Button */}
+          {/* Price + Button */}
           <div className="flex items-center gap-2">
             {isPremium ? (
               hasDiscount ? (
@@ -168,7 +182,7 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
                 </div>
               ) : (
                 <span className="text-lg font-bold text-gray-900">
-                  ₱{template.price} 
+                  ₱{template.price}
                 </span>
               )
             ) : (
@@ -186,7 +200,7 @@ export function TemplateCard({ template, user }: TemplateCardProps) {
               >
                 {isPremium ? "Get Premium" : "Use Free"}
               </Button>
-            </Link> 
+            </Link>
           </div>
         </div>
       </CardFooter>

@@ -57,9 +57,13 @@ interface TemplateCardProps {
   template: Template;
   user: UserData | null;
   slug: string;
+  className?: string;
 }
 
-export const TemplateCard: React.FC<TemplateCardProps> = ({
+/* ------------------------------------------------------------------ */
+/* Default (generic) layout — used when no custom component is mapped  */
+/* ------------------------------------------------------------------ */
+const DefaultTemplateCard: React.FC<TemplateCardProps> = ({
   template,
   user,
   slug,
@@ -68,7 +72,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
   const [copied, setCopied] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const profileUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${
-    user?.username || ""
+    (user as any)?.username || ""
   }`;
 
   const socialIconMap: Record<string, React.ReactNode> = {
@@ -103,7 +107,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
         socialLinks: [],
       };
   const getConnectGridClass = () => {
-    switch (template.connection_style) {
+    switch ((template as any).connection_style) {
       case "list":
         return "flex flex-col gap-2";
       case "compact":
@@ -429,4 +433,24 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
       </Dialog>
     </div>
   );
+};
+
+/* ------------------------------------------------------------------ */
+/* Exported card: uses the component mapped to the template's slug    */
+/* (e.g. Infinitech) and falls back to the generic layout otherwise.  */
+/* ------------------------------------------------------------------ */
+export const TemplateCard: React.FC<TemplateCardProps> = (props) => {
+  const Custom = (props.template as any).previewComponent as
+    | React.ComponentType<any>
+    | undefined;
+
+  if (Custom) {
+    return (
+      <div className="w-full flex justify-center p-6">
+        <Custom template={props.template} user={props.user} slug={props.slug} />
+      </div>
+    );
+  }
+
+  return <DefaultTemplateCard {...props} />;
 };

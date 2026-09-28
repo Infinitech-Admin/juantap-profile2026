@@ -31,6 +31,7 @@ interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   template: Template;
+  onPaymentSuccess?: () => void;
 }
 
 interface PaymentMethod {
@@ -41,7 +42,12 @@ interface PaymentMethod {
   accountInfo: string;
 }
 
-export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) { 
+export function PaymentModal({
+  isOpen,
+  onClose,
+  template,
+  onPaymentSuccess,
+}: PaymentModalProps) {
   // 🔑 Move useEffect inside the component
   useEffect(() => {
     const fetchPaymentAccounts = async () => {
@@ -53,11 +59,11 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
           `${process.env.NEXT_PUBLIC_API_URL}/user-profile`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         const accounts = res.data.payment_accounts || {};
-        const methods: PaymentMethod[] = []; 
+        const methods: PaymentMethod[] = [];
 
         if (accounts.gcash) {
           methods.push({
@@ -66,7 +72,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
             icon: Smartphone,
             details: "Mobile payment via GCash app",
             accountInfo: accounts.gcash,
-          }); 
+          });
         }
         if (accounts.paymaya) {
           methods.push({
@@ -75,7 +81,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
             icon: CreditCard,
             details: "Digital wallet payment",
             accountInfo: accounts.paymaya,
-          }); 
+          });
         }
         if (accounts.bpi) {
           methods.push({
@@ -84,7 +90,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
             icon: Building,
             details: "Bank to bank transfer",
             accountInfo: accounts.bpi,
-          }); 
+          });
         }
         if (accounts.bdo) {
           methods.push({
@@ -191,7 +197,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
             "Content-Type": "multipart/form-data",
           },
           timeout: 30000, // 30 second timeout
-        }
+        },
       );
 
       setIsSubmitted(true);
@@ -208,7 +214,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
         } else {
           setError(
             error.response?.data?.message ||
-              "Submission failed. Please try again."
+              "Submission failed. Please try again.",
           );
         }
       } else {
@@ -231,8 +237,13 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
   };
 
   const handleClose = () => {
+    // Remember whether the payment was submitted before resetting state,
+    // so the parent is only notified after the user has seen the
+    // "Payment Submitted!" screen.
+    const wasSubmitted = isSubmitted;
     resetModal();
     onClose();
+    if (wasSubmitted) onPaymentSuccess?.();
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -241,7 +252,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  }; 
+  };
 
   if (isSubmitted) {
     return (
@@ -261,14 +272,14 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
               an email notification once it's approved (usually within 24
               hours).
             </p>
- 
+
             <Button onClick={handleClose} className="w-full">
               Close
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-    ); 
+    );
   }
 
   return (
@@ -312,16 +323,16 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
                 </div>
 
                 <div className="text-right">
-                  {template.originalPrice && template.discount ? (
+                  {template.original_price && template.discount ? (
                     <div>
                       <span className="text-xl font-bold">
                         ₱{template.price}
                       </span>
 
                       <span className="text-sm text-gray-500 line-through ml-2">
-                        ₱{template.originalPrice}
+                        ₱{template.original_price}
                       </span>
- 
+
                       <Badge variant="destructive" className="ml-2 bg-red-500">
                         -{template.discount}%
                       </Badge>
@@ -342,7 +353,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
                 Payment Instructions
               </CardTitle>
             </CardHeader>
- 
+
             <CardContent className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <ol className="list-decimal list-inside space-y-2 text-sm">
@@ -377,7 +388,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
                         <method.icon className="w-6 h-6 text-gray-600" />
-                        
+
                         <div className="flex-1">
                           <h4 className="font-medium">{method.name}</h4>
                           <p className="text-xs text-gray-500">
@@ -399,7 +410,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
                       </div>
                     </CardContent>
                   </Card>
-                ))} 
+                ))}
               </div>
             </div>
 
@@ -416,7 +427,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
                   </p>
                   <p className="text-sm font-medium text-purple-600 mt-2">
                     Amount: ₱{template.price}
-                  </p> 
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -451,13 +462,12 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
                         size="sm"
                         onClick={removeFile}
                         className="text-red-600 hover:text-red-700"
-                      > 
+                      >
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
                 ) : (
- 
                   <div className="flex items-center justify-center w-full">
                     <label
                       htmlFor="screenshot"
@@ -479,7 +489,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
                         onChange={handleFileChange}
                         className="hidden"
                         required
-                      /> 
+                      />
                     </label>
                   </div>
                 )}
@@ -517,7 +527,7 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
               />
               <p className="text-xs text-gray-500 mt-1">
                 {notes.length}/500 characters
-              </p> 
+              </p>
             </div>
 
             {/* Submit Button */}
@@ -528,14 +538,14 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
                 onClick={handleClose}
                 className="flex-1 bg-transparent"
                 disabled={isSubmitting}
-              > 
+              >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={
                   !selectedMethod || !screenshot || isSubmitting || !!fileError
-                } 
+                }
                 className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               >
                 {isSubmitting ? "Submitting..." : "Submit Payment Proof"}
@@ -545,5 +555,5 @@ export function PaymentModal({ isOpen, onClose, template }: PaymentModalProps) {
         </div>
       </DialogContent>
     </Dialog>
-  ); 
+  );
 }
