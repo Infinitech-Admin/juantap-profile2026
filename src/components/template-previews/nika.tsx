@@ -26,6 +26,7 @@ import {
   Palette,
   Mic,
   Video as VideoIcon,
+  UserPlus,
 } from "lucide-react";
 import type { Template, User } from "@/types/template";
 
@@ -77,6 +78,14 @@ const isVisible = (link: any) => {
   const v = link?.isVisible ?? link?.is_visible;
   return v === undefined || v === true || v === 1 || v === "1";
 };
+
+/* ---------- vCard helpers ---------- */
+const vEsc = (s: string) =>
+  s
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\r?\n/g, "\\n");
 
 /* ---------- Video URL -> embeddable source ----------
    Supports local files from /public (e.g. "/videos/nika.mp4"),
@@ -506,6 +515,55 @@ export const Nika: React.FC<NikaProps> = ({ user }) => {
     }
   };
 
+  /* Save to phone contacts (downloads a .vcf that the phone offers to import) */
+  const handleSaveContact = () => {
+    const name = (displayName || "Contact").trim();
+    const parts = name.split(/\s+/);
+    const family = parts.length > 1 ? parts[parts.length - 1] : "";
+    const given = parts.length > 1 ? parts.slice(0, -1).join(" ") : name;
+
+    const lines: string[] = ["BEGIN:VCARD", "VERSION:3.0"];
+
+    lines.push(`FN:${vEsc(name)}`);
+    lines.push(`N:${vEsc(family)};${vEsc(given)};;;`);
+
+    phones.forEach((ph) => lines.push(`TEL;TYPE=CELL:${ph}`));
+
+    emails.forEach((e, i) =>
+      lines.push(`EMAIL;TYPE=INTERNET${i > 0 ? ",WORK" : ""}:${e}`),
+    );
+
+    websites.forEach((w) =>
+      lines.push(`URL:${w.startsWith("http") ? w : `https://${w}`}`),
+    );
+
+    if (location) lines.push(`ADR;TYPE=WORK:;;${vEsc(location)};;;;`);
+
+    if (bio) lines.push(`NOTE:${vEsc(bio)}`);
+
+    socials.forEach((link) => {
+      const type = String(link.platform ?? "").toLowerCase();
+      if (link.url && type)
+        lines.push(`X-SOCIALPROFILE;TYPE=${type}:${link.url}`);
+    });
+
+    if (pageUrl) lines.push(`URL:${pageUrl}`);
+
+    lines.push("END:VCARD");
+
+    const blob = new Blob([lines.join("\r\n")], {
+      type: "text/vcard;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${name.replace(/\s+/g, "_")}.vcf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   return (
     <div
       className="w-full flex justify-center"
@@ -759,7 +817,7 @@ export const Nika: React.FC<NikaProps> = ({ user }) => {
           <PianoKeys />
 
           <div
-            className="grid grid-cols-2"
+            className="grid grid-cols-3"
             style={{ backgroundColor: BLUE, borderTop: `1cqw solid ${INK}` }}
           >
             <button
@@ -782,6 +840,17 @@ export const Nika: React.FC<NikaProps> = ({ user }) => {
               <Share2 size={18} style={{ color: MINT }} />
               <span style={{ fontSize: "max(12px, 2.4cqw)", fontWeight: 600 }}>
                 Share
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveContact}
+              className="flex flex-col items-center hover:opacity-80"
+              style={{ padding: "2.6cqw 0", gap: "0.6cqw", color: "#fff" }}
+            >
+              <UserPlus size={18} style={{ color: MINT }} />
+              <span style={{ fontSize: "max(12px, 2.4cqw)", fontWeight: 600 }}>
+                Save Contact
               </span>
             </button>
           </div>
