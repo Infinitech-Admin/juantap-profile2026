@@ -4,15 +4,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Zap, Sparkles } from "lucide-react";
-import { ProfilePreview } from "@/components/blocks/profile-preview";
-
+import { Zap, Sparkles } from "lucide-react";
+import {
+  ProfilePreview,
+  type UserData,
+} from "@/components/blocks/profile-preview";
 
 export function HeroSection() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true); // track if we are still checking
   const [loadingBtn, setLoadingBtn] = useState<string | null>(null);
-
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -31,7 +32,7 @@ export function HeroSection() {
         });
 
         if (res.ok) {
-          const userData = await res.json();
+          const userData: UserData = await res.json();
           setUser(userData);
         }
       } catch (err) {
@@ -44,7 +45,6 @@ export function HeroSection() {
     fetchUser();
   }, []);
 
-  // Don't render buttons until loading is done
   const linkHref = !loading && user ? "/templates" : "/register";
 
   return (
@@ -59,7 +59,7 @@ export function HeroSection() {
           <Zap className="w-4 h-4 animate-pulse text-purple-300" />
         </Badge>
 
-       <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-tight bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-tight bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
           Your Digital Profile,
           <br />
           <span className="bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300 bg-clip-text text-transparent">
@@ -68,9 +68,11 @@ export function HeroSection() {
         </h1>
 
         <p className="text-xl md:text-2xl text-purple-100/90 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-          Create stunning, personalized digital profiles with social links, custom designs, and instant sharing via QR
-          codes or NFC. Perfect for networking, business cards, and social media.
+          Create stunning, personalized digital profiles with social links,
+          custom designs, and instant sharing via QR codes or NFC. Perfect for
+          networking, business cards, and social media.
         </p>
+
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
           <Link href={linkHref} onClick={() => setLoadingBtn("create")}>
             <Button
@@ -80,28 +82,23 @@ export function HeroSection() {
               {loadingBtn === "create" ? "Loading..." : "Create Your Profile"}
             </Button>
           </Link>
-
-           
-
         </div>
 
-       {user && (
-        <div className="mt-20 relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent rounded-3xl blur-xl"></div>
-          <div className="relative">
-           <ProfilePreview
-              user={user}
-              imageUrl={
-                user.profile_image
-                  ? `${process.env.NEXT_PUBLIC_IMAGE_URL}/${user.profile_image}`
-                  : undefined
-              }
-            />
-
+        {user && (
+          <div className="mt-20 relative">
+            <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent rounded-3xl blur-xl"></div>
+            <div className="relative">
+              <ProfilePreview
+                user={user}
+                imageUrl={
+                  user.profile_image
+                    ? `${process.env.NEXT_PUBLIC_IMAGE_URL}/${user.profile_image}`
+                    : undefined
+                }
+              />
+            </div>
           </div>
-        </div>
-      )}
-
+        )}
       </div>
     </section>
   );
