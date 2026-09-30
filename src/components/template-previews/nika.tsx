@@ -25,6 +25,7 @@ import {
   Music4,
   Palette,
   Mic,
+  Video as VideoIcon,
 } from "lucide-react";
 import type { Template, User } from "@/types/template";
 
@@ -42,6 +43,9 @@ const PINK = "#ee2a7b";
 const ROW_BG = "rgba(255,255,255,0.9)";
 
 const FONT = "Poppins, 'Segoe UI', Arial, sans-serif";
+
+// Static video inside /public  ->  public/videos/nika.mp4
+const STATIC_VIDEO = "/videos/nika.mp4";
 
 const TikTokIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -72,6 +76,71 @@ const splitList = (value?: string | null) =>
 const isVisible = (link: any) => {
   const v = link?.isVisible ?? link?.is_visible;
   return v === undefined || v === true || v === 1 || v === "1";
+};
+
+/* ---------- Video URL -> embeddable source ----------
+   Supports local files from /public (e.g. "/videos/nika.mp4"),
+   YouTube (watch / youtu.be / shorts), Vimeo, Facebook videos
+   and direct files (.mp4 / .webm / .ogg / .mov). */
+type VideoSource = { kind: "iframe" | "file"; src: string };
+
+const getVideoSource = (raw?: string | null): VideoSource | null => {
+  const url = (raw ?? "").trim();
+  if (!url) return null;
+
+  // Local file from /public (e.g. "/videos/nika.mp4")
+  if (url.startsWith("/") && !url.startsWith("//")) {
+    const path = url.split(/[?#]/)[0];
+    return /\.(mp4|webm|ogg|mov)$/i.test(path)
+      ? { kind: "file", src: url }
+      : null;
+  }
+
+  const full = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  let u: URL;
+  try {
+    u = new URL(full);
+  } catch {
+    return null;
+  }
+
+  const host = u.hostname.replace(/^(www|m)\./, "");
+
+  if (/\.(mp4|webm|ogg|mov)$/i.test(u.pathname)) {
+    return { kind: "file", src: full };
+  }
+
+  if (host === "youtu.be") {
+    const id = u.pathname.split("/").filter(Boolean)[0];
+    return id
+      ? { kind: "iframe", src: `https://www.youtube.com/embed/${id}` }
+      : null;
+  }
+
+  if (host.endsWith("youtube.com")) {
+    const id =
+      u.searchParams.get("v") ||
+      u.pathname.match(/^\/(?:shorts|embed|live)\/([^/?]+)/)?.[1];
+    return id
+      ? { kind: "iframe", src: `https://www.youtube.com/embed/${id}` }
+      : null;
+  }
+
+  if (host === "vimeo.com") {
+    const id = u.pathname.split("/").filter(Boolean)[0];
+    return id && /^\d+$/.test(id)
+      ? { kind: "iframe", src: `https://player.vimeo.com/video/${id}` }
+      : null;
+  }
+
+  if (host.endsWith("facebook.com") || host === "fb.watch") {
+    return {
+      kind: "iframe",
+      src: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(full)}&show_text=false`,
+    };
+  }
+
+  return null;
 };
 
 /* Animations. Uses the individual `translate` / `rotate` CSS properties so
@@ -363,6 +432,46 @@ const SectionLabel = ({
   </h2>
 );
 
+/* ---------- Video frame (16:9, styled like the avatar) ---------- */
+const VideoFrame = ({
+  source,
+  title,
+}: {
+  source: VideoSource;
+  title: string;
+}) => (
+  <div
+    className="relative w-full overflow-hidden bg-black"
+    style={{
+      aspectRatio: "16 / 9",
+      borderRadius: "3cqw",
+      border: `1.2cqw solid ${BLUE}`,
+      boxShadow: `1.2cqw 1.2cqw 0 ${PINK}`,
+    }}
+  >
+    {source.kind === "file" ? (
+      <video
+        src={source.src}
+        controls
+        playsInline
+        preload="metadata"
+        className="absolute inset-0 w-full h-full"
+        style={{ objectFit: "contain" }}
+      />
+    ) : (
+      <iframe
+        src={source.src}
+        title={title}
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        allowFullScreen
+        className="absolute inset-0 w-full h-full"
+        style={{ border: 0 }}
+      />
+    )}
+  </div>
+);
+
 export const Nika: React.FC<NikaProps> = ({ user }) => {
   const [showQr, setShowQr] = useState(false);
 
@@ -376,6 +485,9 @@ export const Nika: React.FC<NikaProps> = ({ user }) => {
   const websites = splitList(p.website);
   const location: string = (p.location ?? "").trim();
   const socials: any[] = (p.socialLinks ?? []).filter(isVisible);
+
+  // Static video from /public/videos/nika.mp4
+  const video = getVideoSource(STATIC_VIDEO);
 
   const hasContact =
     emails.length + phones.length + websites.length > 0 || !!location;
@@ -415,9 +527,9 @@ export const Nika: React.FC<NikaProps> = ({ user }) => {
           aria-hidden="true"
           className="absolute pointer-events-none"
           style={{
-            width: "17cqw",
-            top: "5cqw",
-            left: "7cqw",
+            width: "13cqw",
+            top: "2cqw",
+            left: "6cqw",
             transform: "rotate(-18deg)",
           }}
         >
@@ -432,14 +544,14 @@ export const Nika: React.FC<NikaProps> = ({ user }) => {
           width="5cqw"
           rotate={-10}
           className="nika-rise"
-          style={{ top: "20cqw", left: "18cqw" }}
+          style={{ top: "16cqw", left: "16cqw" }}
         />
         <Note
           color={TEAL}
           width="4.5cqw"
           rotate={12}
           className="nika-rise"
-          style={{ top: "22cqw", left: "22cqw", animationDelay: "1.6s" }}
+          style={{ top: "18cqw", left: "20cqw", animationDelay: "1.6s" }}
         />
 
         {/* Gently bobbing note on the right */}
@@ -509,7 +621,7 @@ export const Nika: React.FC<NikaProps> = ({ user }) => {
           {/* Name + bio */}
           <div
             className="w-full flex flex-col items-center text-center"
-            style={{ padding: "0 7cqw", marginTop: "4cqw", gap: "1.4cqw" }}
+            style={{ padding: "0 7cqw", marginTop: "6cqw", gap: "1.4cqw" }}
           >
             {displayName && (
               <h1
@@ -620,6 +732,22 @@ export const Nika: React.FC<NikaProps> = ({ user }) => {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* Video */}
+          {video && (
+            <div
+              className="w-full flex flex-col"
+              style={{ padding: "0 5cqw", marginTop: "4.6cqw", gap: "2.2cqw" }}
+            >
+              <SectionLabel icon={<VideoIcon size={16} />} color={TEAL}>
+                Watch
+              </SectionLabel>
+              <VideoFrame
+                source={video}
+                title={displayName ? `${displayName} video` : "Video"}
+              />
             </div>
           )}
 
