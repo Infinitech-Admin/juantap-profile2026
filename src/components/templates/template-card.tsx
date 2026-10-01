@@ -19,7 +19,8 @@ interface TemplateCardProps {
 // Templates whose artwork is not 3:4 (keeps the full design visible in the card)
 const PREVIEW_ASPECT: Record<string, string> = {
   infinitech: "aspect-[632/957]",
-  nika: "aspect-[632/957]", // NEW
+  nika: "aspect-[632/957]",
+  tech: "aspect-[632/957]", // NEW
 };
 
 export function TemplateCard({ template, user }: TemplateCardProps) {
