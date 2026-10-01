@@ -56,9 +56,16 @@ const GHOST_DURATION = 2600;
 // If the file is missing, the cartoon ghost is shown instead.
 const GHOST_IMAGE = "/images/ghost-scare.png";
 
-// Optional scream sound, e.g. "/sounds/boo.mp3". Leave "" to disable.
-// Note: some browsers block audio until the user taps once.
+// Scream sound: a local file ("/sounds/boo.mp3" in public/sounds/) OR a full online
+// URL ("https://.../scream.mp3"). Online links can break or block hotlinking, so
+// hosting the file yourself is safer.
+// Leave "" (or if the file/link fails) to use the built-in synthesized scare sound.
+// Note: phones/browsers may block audio until the first tap, so if it is blocked
+// the sound plays on the first tap while the ghost is still on screen.
 const GHOST_SOUND = "";
+
+// One sudden sound only: the audio is cut off after this many ms (even if the file is longer).
+const GHOST_SOUND_MAX_MS = 1800;
 
 const TikTokIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -98,6 +105,115 @@ const vEsc = (s: string) =>
     .replace(/;/g, "\\;")
     .replace(/,/g, "\\,")
     .replace(/\r?\n/g, "\\n");
+
+/* ---------- Synthesized jump-scare sound (no audio file needed) ---------- */
+const playSynthScare = async (): Promise<boolean> => {
+  try {
+    const Ctx: typeof AudioContext | undefined =
+      window.AudioContext || (window as any).webkitAudioContext;
+    if (!Ctx) return false;
+
+    const ctx = new Ctx();
+    try {
+      await ctx.resume();
+    } catch {
+      /* ignore */
+    }
+    if (ctx.state !== "running") {
+      ctx.close().catch(() => {});
+      return false;
+    }
+
+    const t = ctx.currentTime;
+
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, t);
+    master.gain.exponentialRampToValueAtTime(0.9, t + 0.03);
+    master.gain.exponentialRampToValueAtTime(0.0001, t + 1.3);
+    master.connect(ctx.destination);
+
+    // Low boom
+    const boom = ctx.createOscillator();
+    boom.type = "sine";
+    boom.frequency.setValueAtTime(120, t);
+    boom.frequency.exponentialRampToValueAtTime(28, t + 0.5);
+    const boomGain = ctx.createGain();
+    boomGain.gain.setValueAtTime(1, t);
+    boomGain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+    boom.connect(boomGain);
+    boomGain.connect(master);
+    boom.start(t);
+    boom.stop(t + 0.7);
+
+    // Screech (rising saw with vibrato)
+    const screech = ctx.createOscillator();
+    screech.type = "sawtooth";
+    screech.frequency.setValueAtTime(500, t + 0.05);
+    screech.frequency.exponentialRampToValueAtTime(1900, t + 0.3);
+    screech.frequency.exponentialRampToValueAtTime(900, t + 1.1);
+
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 28;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 120;
+    lfo.connect(lfoGain);
+    lfoGain.connect(screech.frequency);
+
+    const band = ctx.createBiquadFilter();
+    band.type = "bandpass";
+    band.frequency.value = 1400;
+    band.Q.value = 0.8;
+
+    const screechGain = ctx.createGain();
+    screechGain.gain.setValueAtTime(0.0001, t + 0.05);
+    screechGain.gain.exponentialRampToValueAtTime(0.55, t + 0.1);
+    screechGain.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+
+    screech.connect(band);
+    band.connect(screechGain);
+    screechGain.connect(master);
+    screech.start(t + 0.05);
+    lfo.start(t + 0.05);
+    screech.stop(t + 1.3);
+    lfo.stop(t + 1.3);
+
+    // Noise burst (the "hit")
+    const len = Math.floor(ctx.sampleRate * 0.5);
+    const buffer = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++)
+      data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.7, t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    noise.connect(noiseGain);
+    noiseGain.connect(master);
+    noise.start(t);
+
+    setTimeout(() => ctx.close().catch(() => {}), 1800);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/* Try the audio file first, then the synthesized sound. Resolves true if something played. */
+const playScareSound = async (): Promise<boolean> => {
+  if (GHOST_SOUND) {
+    try {
+      const audio = new Audio(GHOST_SOUND);
+      audio.volume = 1;
+      await audio.play();
+      setTimeout(() => audio.pause(), GHOST_SOUND_MAX_MS);
+      return true;
+    } catch {
+      /* blocked or missing file -> fall back */
+    }
+  }
+  return playSynthScare();
+};
 
 /* ---------- Animated overlays (positions are % of the 1024 x 1536 artwork) ---------- */
 
@@ -631,20 +747,33 @@ export const Halloween: React.FC<HalloweenProps> = ({ user }) => {
       /* vibration unsupported */
     }
 
-    if (GHOST_SOUND) {
-      try {
-        const audio = new Audio(GHOST_SOUND);
-        audio.volume = 1;
-        audio.play().catch(() => {
-          /* autoplay blocked */
-        });
-      } catch {
-        /* audio unsupported */
-      }
-    }
+    let cancelled = false;
+    const events = ["pointerdown", "touchstart", "keydown"] as const;
 
-    const t = setTimeout(() => setShowGhost(false), GHOST_DURATION);
-    return () => clearTimeout(t);
+    const onGesture = () => {
+      events.forEach((ev) => window.removeEventListener(ev, onGesture));
+      if (!cancelled) playScareSound();
+    };
+
+    // Autoplay attempt; if the browser blocks it, play on the first tap
+    playScareSound().then((ok) => {
+      if (ok || cancelled) return;
+      events.forEach((ev) =>
+        window.addEventListener(ev, onGesture, { passive: true }),
+      );
+    });
+
+    const t = setTimeout(() => {
+      cancelled = true;
+      events.forEach((ev) => window.removeEventListener(ev, onGesture));
+      setShowGhost(false);
+    }, GHOST_DURATION);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+      events.forEach((ev) => window.removeEventListener(ev, onGesture));
+    };
   }, []);
 
   const avatarUrl = user?.avatar_url || null;
