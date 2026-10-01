@@ -15,6 +15,7 @@ import { CorporateBlue } from "@/components/template-previews/corporate-blue"; /
 import { CorporateEmerald } from "@/components/template-previews/corporate-emerald"; // NEW
 import { MidnightGold } from "@/components/template-previews/midnight-gold"; // NEW
 import { ExecutivePrestige } from "@/components/template-previews/executive-prestige"; // NEW
+import { AuroraGlass } from "@/components/template-previews/aurora-glass"; // NEW
 // Add more template imports as you create them
 
 export interface Template {
@@ -74,6 +75,7 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "corporate-emerald": CorporateEmerald, // NEW - must match the slug in your database
   "midnight-gold": MidnightGold, // NEW - must match the slug in your database
   "executive-prestige": ExecutivePrestige, // NEW - must match the slug in your database
+  "aurora-glass": AuroraGlass, // NEW - must match the slug in your database
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,
