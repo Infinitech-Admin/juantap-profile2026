@@ -8,7 +8,8 @@ import { PreviewRenderer } from "@/components/templates/PreviewRenderer";
 import { MinimalClean } from "@/components/template-previews/minimal-clean";
 import { Infinitech } from "@/components/template-previews/infinitech";
 import { Nika } from "@/components/template-previews/nika";
-import { Tech } from "@/components/template-previews/tech"; // NEW
+import { Tech } from "@/components/template-previews/tech";
+import { Halloween } from "@/components/template-previews/halloween"; // NEW
 // Add more template imports as you create them
 
 export interface Template {
@@ -61,7 +62,8 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "minimal-clean": MinimalClean,
   infinitech: Infinitech, // must match the slug in your database
   nika: Nika, // must match the slug in your database
-  tech: Tech, // NEW - must match the slug in your database
+  tech: Tech, // must match the slug in your database
+  halloween: Halloween, // NEW - must match the slug in your database
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,
