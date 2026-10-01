@@ -10,7 +10,8 @@ import { Infinitech } from "@/components/template-previews/infinitech";
 import { Nika } from "@/components/template-previews/nika";
 import { Tech } from "@/components/template-previews/tech";
 import { Halloween } from "@/components/template-previews/halloween";
-import { Executive } from "@/components/template-previews/executive"; // NEW
+import { Executive } from "@/components/template-previews/executive";
+import { CorporateBlue } from "@/components/template-previews/corporate-blue"; // NEW
 // Add more template imports as you create them
 
 export interface Template {
@@ -65,7 +66,8 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   nika: Nika, // must match the slug in your database
   tech: Tech, // must match the slug in your database
   halloween: Halloween, // must match the slug in your database
-  executive: Executive, // NEW - must match the slug in your database
+  executive: Executive, // must match the slug in your database
+  "corporate-blue": CorporateBlue, // NEW - must match the slug in your database
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,
