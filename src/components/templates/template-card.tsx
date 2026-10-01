@@ -21,7 +21,8 @@ const PREVIEW_ASPECT: Record<string, string> = {
   infinitech: "aspect-[632/957]",
   nika: "aspect-[632/957]",
   tech: "aspect-[632/957]",
-  halloween: "aspect-[632/957]", // NEW
+  halloween: "aspect-[632/957]",
+  executive: "aspect-[632/957]", // NEW
 };
 
 export function TemplateCard({ template, user }: TemplateCardProps) {
