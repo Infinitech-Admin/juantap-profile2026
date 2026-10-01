@@ -1,7 +1,7 @@
 "use client";
 
 // src/components/template-previews/halloween.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   User as UserIcon,
   Mail,
@@ -47,6 +47,18 @@ const FONT_TITLE = "Creepster, Poppins, 'Segoe UI', Arial, sans-serif";
 
 // Put the artwork in  public/images/halloween-bg.jpg
 const BG_IMAGE = "/images/halloween-bg.jpg";
+
+// How long the jump-scare ghost stays on screen (ms)
+const GHOST_DURATION = 2600;
+
+// Realistic ghost photo (transparent PNG/WebP works best, keep it small < 200KB).
+// Put it in  public/images/ghost-scare.png
+// If the file is missing, the cartoon ghost is shown instead.
+const GHOST_IMAGE = "/images/ghost-scare.png";
+
+// Optional scream sound, e.g. "/sounds/boo.mp3". Leave "" to disable.
+// Note: some browsers block audio until the user taps once.
+const GHOST_SOUND = "";
 
 const TikTokIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -261,6 +273,95 @@ const HW_CSS = `
 @keyframes hw-fade     { from { opacity: 0; } to { opacity: 1; } }
 @keyframes hw-zoom     { from { opacity: 0; scale: .85; } to { opacity: 1; scale: 1; } }
 
+/* ---------- Jump-scare ghost ---------- */
+@keyframes hw-scare-bg {
+  0%   { opacity: 0; }
+  6%   { opacity: 1; }
+  10%  { opacity: .55; }
+  14%  { opacity: 1; }
+  82%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes hw-scare-flash {
+  0%   { opacity: 0; }
+  5%   { opacity: .95; }
+  20%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes hw-boo {
+  0%   { scale: .05; opacity: 0; translate: 0 22cqw; }
+  10%  { scale: 1.25; opacity: 1; translate: 0 0; }
+  16%  { scale: .95; }
+  22%  { scale: 1.08; }
+  28%  { scale: 1; }
+  80%  { scale: 1.04; opacity: 1; translate: 0 -2cqw; }
+  100% { scale: 1.9; opacity: 0; translate: 0 -8cqw; }
+}
+@keyframes hw-shake {
+  0%,100% { rotate: 0deg; }
+  10% { rotate: -5deg; } 20% { rotate: 5deg; } 30% { rotate: -4deg; }
+  40% { rotate: 4deg; }  50% { rotate: -3deg; } 60% { rotate: 3deg; }
+  70% { rotate: -2deg; } 80% { rotate: 2deg; }
+}
+@keyframes hw-eye-glow {
+  0%,100% { opacity: .7; } 50% { opacity: 1; }
+}
+@keyframes hw-boo-text {
+  0%,12%  { opacity: 0; scale: .3; }
+  22%     { opacity: 1; scale: 1.25; }
+  30%,80% { opacity: 1; scale: 1; }
+  100%    { opacity: 0; scale: 1.5; }
+}
+
+.hw-scare {
+  position: absolute; inset: 0; z-index: 60; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  animation: hw-scare-bg ${GHOST_DURATION}ms ease-out both;
+  background: radial-gradient(circle at 50% 45%, rgba(40,10,0,.82), rgba(0,0,0,.97) 75%);
+}
+.hw-scare-flash {
+  position: absolute; inset: 0; pointer-events: none;
+  background: #fff3de;
+  animation: hw-scare-flash ${GHOST_DURATION}ms linear both;
+}
+.hw-scare-ghost {
+  position: relative; width: 78cqw; margin-top: -8cqw;
+  animation: hw-boo ${GHOST_DURATION}ms cubic-bezier(.2,.9,.3,1) both;
+  filter: drop-shadow(0 0 5cqw rgba(255,140,30,.85));
+}
+.hw-scare-ghost svg {
+  display: block; width: 100%;
+  animation: hw-shake .5s linear .25s 3;
+}
+.hw-scare-eye { animation: hw-eye-glow .25s ease-in-out infinite; }
+
+/* Realistic photo version */
+.hw-scare-ghost.hw-real { width: 94cqw; margin-top: -6cqw; }
+.hw-scare-photo {
+  display: block; width: 100%; height: auto;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 50%, transparent 76%);
+  mask-image: radial-gradient(ellipse at center, #000 50%, transparent 76%);
+  filter: grayscale(.85) contrast(1.35) brightness(.95) sepia(.25);
+  animation: hw-glitch .35s steps(2) .3s infinite;
+}
+@keyframes hw-glitch {
+  0%   { translate: 0 0; }
+  20%  { translate: -.8cqw .3cqw; }
+  40%  { translate: .9cqw -.4cqw; }
+  60%  { translate: -.4cqw -.6cqw; }
+  80%  { translate: .6cqw .5cqw; }
+  100% { translate: 0 0; }
+}
+.hw-scare-text {
+  position: absolute; left: 0; right: 0; bottom: 14cqw; text-align: center;
+  font-family: ${FONT_TITLE}; font-size: max(40px, 16cqw); letter-spacing: .08em;
+  color: ${EMBER};
+  text-shadow: 0 0 3cqw rgba(255,90,10,.95), 0 0 .6cqw #000;
+  animation: hw-boo-text ${GHOST_DURATION}ms ease-out both;
+  pointer-events: none;
+}
+
 .hw-abs     { position: absolute; pointer-events: none; }
 .hw-glow    { position: absolute; pointer-events: none; translate: -50% -50%; border-radius: 9999px; mix-blend-mode: screen; }
 .hw-moon    { animation: hw-moon 5s ease-in-out infinite; }
@@ -333,6 +434,8 @@ const HW_CSS = `
 .hw-modal   { animation: hw-zoom .3s cubic-bezier(.2,1.2,.4,1) both; }
 
 @media (prefers-reduced-motion: reduce) {
+  .hw-scare { display: none; }
+  .hw-scare-photo { animation: none; }
   .hw-bat, .hw-leaf, .hw-ember, .hw-fog, .hw-bar-glow, .hw-row::after { display: none; }
   .hw-moon, .hw-flicker, .hw-pumpkin, .hw-window, .hw-up, .hw-pop, .hw-float,
   .hw-name, .hw-line, .hw-ring, .hw-ring-r, .hw-avatar, .hw-row, .hw-chip,
@@ -346,6 +449,57 @@ const BatSvg = () => (
     <path
       d="M50 12 C46 4 38 2 30 6 C24 2 12 4 2 14 C12 12 20 16 26 22 C32 18 38 20 42 28 C46 24 48 24 50 30 C52 24 54 24 58 28 C62 20 68 18 74 22 C80 16 88 12 98 14 C88 4 76 2 70 6 C62 2 54 4 50 12 Z"
       fill="#050202"
+    />
+  </svg>
+);
+
+/* Jump-scare ghost */
+const ScareGhostSvg = () => (
+  <svg viewBox="0 0 200 250" aria-hidden="true">
+    <defs>
+      <linearGradient id="hw-ghost-body" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="100%" stopColor="#d7d2ce" />
+      </linearGradient>
+      <radialGradient id="hw-ghost-eye" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#ffb347" />
+        <stop offset="100%" stopColor="#ff3d00" />
+      </radialGradient>
+    </defs>
+    <path
+      d="M100 8 C50 8 18 48 18 100 V224 L44 204 L72 230 L100 204 L128 230 L156 204 L182 224 V100 C182 48 150 8 100 8 Z"
+      fill="url(#hw-ghost-body)"
+    />
+    {/* eyes */}
+    <ellipse cx="68" cy="96" rx="19" ry="28" fill="#080202" />
+    <ellipse cx="132" cy="96" rx="19" ry="28" fill="#080202" />
+    <ellipse
+      className="hw-scare-eye"
+      cx="68"
+      cy="100"
+      rx="7"
+      ry="10"
+      fill="url(#hw-ghost-eye)"
+    />
+    <ellipse
+      className="hw-scare-eye"
+      cx="132"
+      cy="100"
+      rx="7"
+      ry="10"
+      fill="url(#hw-ghost-eye)"
+    />
+    {/* screaming mouth */}
+    <ellipse cx="100" cy="166" rx="26" ry="40" fill="#080202" />
+    <ellipse cx="100" cy="186" rx="14" ry="16" fill="#3a0a02" />
+    {/* arms */}
+    <path
+      d="M20 120 C2 110 -6 130 6 146 C16 158 28 152 30 140 Z"
+      fill="url(#hw-ghost-body)"
+    />
+    <path
+      d="M180 120 C198 110 206 130 194 146 C184 158 172 152 170 140 Z"
+      fill="url(#hw-ghost-body)"
     />
   </svg>
 );
@@ -458,6 +612,40 @@ const SectionLabel = ({
 
 export const Halloween: React.FC<HalloweenProps> = ({ user }) => {
   const [showQr, setShowQr] = useState(false);
+  // Starts true so the ghost jumps out the moment the page opens / QR is scanned
+  const [showGhost, setShowGhost] = useState(true);
+  const [photoOk, setPhotoOk] = useState(Boolean(GHOST_IMAGE));
+
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setShowGhost(false);
+      return;
+    }
+
+    try {
+      navigator.vibrate?.([120, 60, 200]);
+    } catch {
+      /* vibration unsupported */
+    }
+
+    if (GHOST_SOUND) {
+      try {
+        const audio = new Audio(GHOST_SOUND);
+        audio.volume = 1;
+        audio.play().catch(() => {
+          /* autoplay blocked */
+        });
+      } catch {
+        /* audio unsupported */
+      }
+    }
+
+    const t = setTimeout(() => setShowGhost(false), GHOST_DURATION);
+    return () => clearTimeout(t);
+  }, []);
 
   const avatarUrl = user?.avatar_url || null;
   const p: any = user?.profile ?? {};
@@ -962,6 +1150,33 @@ export const Halloween: React.FC<HalloweenProps> = ({ user }) => {
               <span className="text-sm font-medium" style={{ color: CREAM }}>
                 {displayName}
               </span>
+            </div>
+          </div>
+        )}
+
+        {/* ---------- Jump-scare ghost (plays instantly on open / scan) ---------- */}
+        {showGhost && (
+          <div
+            className="hw-scare"
+            role="presentation"
+            onClick={() => setShowGhost(false)}
+          >
+            <span aria-hidden="true" className="hw-scare-flash" />
+            <div className={`hw-scare-ghost${photoOk ? " hw-real" : ""}`}>
+              {photoOk ? (
+                <img
+                  src={GHOST_IMAGE}
+                  alt=""
+                  className="hw-scare-photo"
+                  draggable={false}
+                  onError={() => setPhotoOk(false)}
+                />
+              ) : (
+                <ScareGhostSvg />
+              )}
+            </div>
+            <div aria-hidden="true" className="hw-scare-text">
+              BOO!
             </div>
           </div>
         )}
