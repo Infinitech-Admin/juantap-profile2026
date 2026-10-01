@@ -26,6 +26,7 @@ const PREVIEW_ASPECT: Record<string, string> = {
   "corporate-blue": "aspect-[632/957]", // NEW
   "corporate-emerald": "aspect-[632/957]", // NEW
   "midnight-gold": "aspect-[632/957]", // NEW
+  "executive-prestige": "aspect-[632/957]", // NEW
 };
 
 export function TemplateCard({ template, user }: TemplateCardProps) {
