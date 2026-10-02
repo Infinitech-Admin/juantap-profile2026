@@ -16,6 +16,10 @@ import { CorporateEmerald } from "@/components/template-previews/corporate-emera
 import { MidnightGold } from "@/components/template-previews/midnight-gold"; // NEW
 import { ExecutivePrestige } from "@/components/template-previews/executive-prestige"; // NEW
 import { AuroraGlass } from "@/components/template-previews/aurora-glass"; // NEW
+import { ObsidianCopper } from "@/components/template-previews/obsidian-copper"; // NEW
+import { RoseQuartz } from "@/components/template-previews/rose-quartz";
+import { OceanDepth } from "@/components/template-previews/ocean-depth";
+import { NeonSynthwave } from "@/components/template-previews/neon-synthwave";
 // Add more template imports as you create them
 
 export interface Template {
@@ -76,6 +80,10 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "midnight-gold": MidnightGold, // NEW - must match the slug in your database
   "executive-prestige": ExecutivePrestige, // NEW - must match the slug in your database
   "aurora-glass": AuroraGlass, // NEW - must match the slug in your database
+  "obsidian-copper": ObsidianCopper, // NEW - must match the slug in your database
+  "rose-quartz": RoseQuartz,
+  "ocean-depth": OceanDepth,
+  "neon-synthwave": NeonSynthwave,
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,
