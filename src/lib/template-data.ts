@@ -34,6 +34,26 @@ import { CrystalIce } from "@/components/template-previews/crystal-ice";
 import { DesertDune } from "@/components/template-previews/desert-dune";
 import { HoloPrism } from "@/components/template-previews/holo-prism";
 import { MarbleOnyx } from "@/components/template-previews/marble-onyx";
+import { AuroraBorealis } from "@/components/template-previews/aurora-borealis";
+import { BlackDiamond } from "@/components/template-previews/black-diamond";
+import { CosmicNebula } from "@/components/template-previews/cosmic-nebula";
+import { LiquidGold } from "@/components/template-previews/liquid-gold";
+import { CyberGrid } from "@/components/template-previews/cyber-grid";
+import { MandalaGold } from "@/components/template-previews/mandala-gold";
+import { QuantumOrbit } from "@/components/template-previews/quantum-orbit";
+import { CrimsonEclipse } from "@/components/template-previews/crimson-eclipse";
+import { SakuraNight } from "@/components/template-previews/sakura-night";
+import { InfernoEmber } from "@/components/template-previews/inferno-ember";
+import { PastelClouds } from "@/components/template-previews/pastel-clouds";
+import { MintFresh } from "@/components/template-previews/mint-fresh";
+import { LavenderDream } from "@/components/template-previews/lavender-dream";
+import { CitrusPop } from "@/components/template-previews/citrus-pop";
+import { BlueprintPro } from "@/components/template-previews/blueprint-pro";
+import { TropicalLeaves } from "@/components/template-previews/tropical-leaves";
+import { MonoLines } from "@/components/template-previews/mono-lines";
+import { ConfettiParty } from "@/components/template-previews/confetti-party";
+import { SlateGeometric } from "@/components/template-previews/slate-geometric";
+import { MidnightCity } from "@/components/template-previews/midnight-city";
 // Add more template imports as you create them
 
 export interface Template {
@@ -112,6 +132,26 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "desert-dune": DesertDune,
   "holo-prism": HoloPrism,
   "marble-onyx": MarbleOnyx,
+  "aurora-borealis": AuroraBorealis,
+  "black-diamond": BlackDiamond,
+  "cosmic-nebula": CosmicNebula,
+  "liquid-gold": LiquidGold,
+  "cyber-grid": CyberGrid,
+  "mandala-gold": MandalaGold,
+  "quantum-orbit": QuantumOrbit,
+  "crimson-eclipse": CrimsonEclipse,
+  "sakura-night": SakuraNight,
+  "inferno-ember": InfernoEmber,
+  "pastel-clouds": PastelClouds,
+  "mint-fresh": MintFresh,
+  "lavender-dream": LavenderDream,
+  "citrus-pop": CitrusPop,
+  "blueprint-pro": BlueprintPro,
+  "tropical-leaves": TropicalLeaves,
+  "mono-lines": MonoLines,
+  "confetti-party": ConfettiParty,
+  "slate-geometric": SlateGeometric,
+  "midnight-city": MidnightCity,
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,
