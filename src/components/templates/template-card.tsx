@@ -31,6 +31,10 @@ const PREVIEW_ASPECT: Record<string, string> = {
   "rose-quartz": "aspect-[632/957]",
   "ocean-depth": "aspect-[632/957]",
   "neon-synthwave": "aspect-[632/957]",
+  "gold-luxe": "aspect-[632/957]",
+  "forest-mist": "aspect-[632/957]",
+  "sunset-blaze": "aspect-[632/957]",
+  "minimal-paper": "aspect-[632/957]",
 };
 
 export function TemplateCard({ template, user }: TemplateCardProps) {

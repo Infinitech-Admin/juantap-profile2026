@@ -20,6 +20,10 @@ import { ObsidianCopper } from "@/components/template-previews/obsidian-copper";
 import { RoseQuartz } from "@/components/template-previews/rose-quartz";
 import { OceanDepth } from "@/components/template-previews/ocean-depth";
 import { NeonSynthwave } from "@/components/template-previews/neon-synthwave";
+import { GoldLuxe } from "@/components/template-previews/gold-luxe";
+import { ForestMist } from "@/components/template-previews/forest-mist";
+import { SunsetBlaze } from "@/components/template-previews/sunset-blaze";
+import { MinimalPaper } from "@/components/template-previews/minimal-paper";
 // Add more template imports as you create them
 
 export interface Template {
@@ -84,6 +88,10 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "rose-quartz": RoseQuartz,
   "ocean-depth": OceanDepth,
   "neon-synthwave": NeonSynthwave,
+  "gold-luxe": GoldLuxe,
+  "forest-mist": ForestMist,
+  "sunset-blaze": SunsetBlaze,
+  "minimal-paper": MinimalPaper,
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,
