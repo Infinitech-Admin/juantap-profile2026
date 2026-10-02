@@ -24,6 +24,16 @@ import { GoldLuxe } from "@/components/template-previews/gold-luxe";
 import { ForestMist } from "@/components/template-previews/forest-mist";
 import { SunsetBlaze } from "@/components/template-previews/sunset-blaze";
 import { MinimalPaper } from "@/components/template-previews/minimal-paper";
+import { RoyalVelvet } from "@/components/template-previews/royal-velvet";
+import { PlatinumEdge } from "@/components/template-previews/platinum-edge";
+import { EmeraldNoir } from "@/components/template-previews/emerald-noir";
+import { SapphireNight } from "@/components/template-previews/sapphire-night";
+import { RoseGoldSilk } from "@/components/template-previews/rose-gold-silk";
+import { CarbonFiber } from "@/components/template-previews/carbon-fiber";
+import { CrystalIce } from "@/components/template-previews/crystal-ice";
+import { DesertDune } from "@/components/template-previews/desert-dune";
+import { HoloPrism } from "@/components/template-previews/holo-prism";
+import { MarbleOnyx } from "@/components/template-previews/marble-onyx";
 // Add more template imports as you create them
 
 export interface Template {
@@ -92,6 +102,16 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "forest-mist": ForestMist,
   "sunset-blaze": SunsetBlaze,
   "minimal-paper": MinimalPaper,
+  "royal-velvet": RoyalVelvet,
+  "platinum-edge": PlatinumEdge,
+  "emerald-noir": EmeraldNoir,
+  "sapphire-night": SapphireNight,
+  "rose-gold-silk": RoseGoldSilk,
+  "carbon-fiber": CarbonFiber,
+  "crystal-ice": CrystalIce,
+  "desert-dune": DesertDune,
+  "holo-prism": HoloPrism,
+  "marble-onyx": MarbleOnyx,
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,

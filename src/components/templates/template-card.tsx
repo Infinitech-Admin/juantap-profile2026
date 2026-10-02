@@ -23,11 +23,12 @@ const PREVIEW_ASPECT: Record<string, string> = {
   tech: "aspect-[632/957]",
   halloween: "aspect-[632/957]",
   executive: "aspect-[632/957]",
-  "corporate-blue": "aspect-[632/957]", // NEW
-  "corporate-emerald": "aspect-[632/957]", // NEW
-  "midnight-gold": "aspect-[632/957]", // NEW
-  "executive-prestige": "aspect-[632/957]", // NEW
-  "aurora-glass": "aspect-[632/957]", // NEW
+  "corporate-blue": "aspect-[632/957]",
+  "corporate-emerald": "aspect-[632/957]",
+  "midnight-gold": "aspect-[632/957]",
+  "executive-prestige": "aspect-[632/957]",
+  "aurora-glass": "aspect-[632/957]",
+  "obsidian-copper": "aspect-[632/957]", // was missing, but it is registered in template-data.ts
   "rose-quartz": "aspect-[632/957]",
   "ocean-depth": "aspect-[632/957]",
   "neon-synthwave": "aspect-[632/957]",
@@ -35,6 +36,18 @@ const PREVIEW_ASPECT: Record<string, string> = {
   "forest-mist": "aspect-[632/957]",
   "sunset-blaze": "aspect-[632/957]",
   "minimal-paper": "aspect-[632/957]",
+
+  // NEW: 10 premium-feel templates
+  "royal-velvet": "aspect-[632/957]",
+  "platinum-edge": "aspect-[632/957]",
+  "emerald-noir": "aspect-[632/957]",
+  "sapphire-night": "aspect-[632/957]",
+  "rose-gold-silk": "aspect-[632/957]",
+  "carbon-fiber": "aspect-[632/957]",
+  "crystal-ice": "aspect-[632/957]",
+  "desert-dune": "aspect-[632/957]",
+  "holo-prism": "aspect-[632/957]",
+  "marble-onyx": "aspect-[632/957]",
 };
 
 export function TemplateCard({ template, user }: TemplateCardProps) {
