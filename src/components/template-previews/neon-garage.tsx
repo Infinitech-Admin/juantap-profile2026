@@ -1,10 +1,10 @@
 "use client";
 
 // src/components/template-previews/neon-garage.tsx
-// Neon Garage - Dark automotive look in neon green: hex-mesh texture, night skyline, sleek line-art cars and speed streaks (premium)
+// Neon Garage - Dark automotive look in neon green: fine hex mesh, perspective grid floor, thin speed lines and a video panel (premium)
 // Slug: "neon-garage" - register in src/lib/template-data.ts (TEMPLATE_COMPONENTS)
 // and in TemplateCard.tsx (PREVIEW_ASPECT).
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { Template, User } from "@/types/template";
 import { CardShell, type CardTheme } from "./card-kit";
 
@@ -28,326 +28,275 @@ const THEME: CardTheme = {
 };
 
 const GREEN = "#39ff14";
-const LIME = "#b6ff3b";
+
+// Files live in /public, so they are served from the site root.
+const VIDEOS = ["/video1.mp4", "/video2.mp4"];
 
 const CSS = `
-@keyframes ng-right { from { translate: -260px 0; } to { translate: 1300px 0; } }
-@keyframes ng-left  { from { translate: 1300px 0; } to { translate: -260px 0; } }
-@keyframes ng-lane  { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -140; } }
-@keyframes ng-pulse { 0%,100% { opacity: .35; } 50% { opacity: .8; } }
-@keyframes ng-glint { 0%,100% { opacity: .15; translate: 0 0; } 50% { opacity: .7; translate: 20px 0; } }
+@keyframes ng-fade  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ng-right { from { translate: -400px 0; } to { translate: 1400px 0; } }
+@keyframes ng-left  { from { translate: 1400px 0; } to { translate: -400px 0; } }
+@keyframes ng-pulse { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
 .ng-right { animation: ng-right linear infinite; }
 .ng-left  { animation: ng-left linear infinite; }
-.ng-lane  { animation: ng-lane 1s linear infinite; }
 .ng-pulse { animation: ng-pulse 5s ease-in-out infinite; }
-.ng-glint { animation: ng-glint 5s ease-in-out infinite; }
-.ng-car { filter: drop-shadow(0 0 4px currentColor); }
+.ng-video { animation: ng-fade .8s ease .3s both; }
 @media (prefers-reduced-motion: reduce) {
-  .ng-right, .ng-left, .ng-lane, .ng-pulse, .ng-glint { animation: none; }
+  .ng-right, .ng-left, .ng-pulse, .ng-video { animation: none; }
   .ng-moving { display: none; }
 }
 `;
 
-// Skyline silhouettes: [x, width, top]
-const SKYLINE: [number, number, number][] = [
-  [0, 120, 900],
-  [110, 90, 820],
-  [190, 130, 950],
-  [310, 100, 860],
-  [400, 140, 980],
-  [530, 90, 840],
-  [610, 130, 920],
-  [730, 100, 810],
-  [820, 110, 950],
-  [920, 104, 870],
-];
+// Horizon and perspective grid
+const HORIZON = 1060;
+const VP_X = 512;
+const BOTTOM = 1536;
 
-const WINDOWS = SKYLINE.flatMap(([x, w, top], b) =>
-  Array.from({ length: 5 }, (_, k) => ({
-    x: x + 14 + ((k * 29 + b * 13) % Math.max(20, w - 30)),
-    y: top + 30 + ((k * 53 + b * 17) % 180),
-    o: 0.15 + ((b + k) % 4) * 0.1,
-  })),
-);
+// Horizontal grid lines get closer together near the horizon
+const H_LINES = Array.from({ length: 9 }, (_, i) => {
+  const t = (i + 1) / 9;
+  return HORIZON + (BOTTOM - HORIZON) * t * t;
+});
 
-// Cars drive across at varied heights, speeds and directions (deterministic, so SSR matches the client)
-const CARS = Array.from({ length: 7 }, (_, i) => ({
-  y: 120 + ((i * 397) % 1250),
-  dir: (i * 5) % 3 === 0 ? "left" : "right",
-  dur: 9 + ((i * 5) % 10),
-  delay: -((i * 29) % 19),
-  scale: 0.6 + (i % 3) * 0.25,
-  opacity: 0.35 + (i % 3) * 0.2,
-}));
+// Lines fanning out from the vanishing point
+const V_LINES = Array.from({ length: 15 }, (_, i) => (i - 7) * 190);
 
-// Thin speed streaks
-const STREAKS = Array.from({ length: 8 }, (_, i) => ({
-  y: 80 + ((i * 211) % 1400),
-  len: 120 + ((i * 53) % 200),
+// A few thin, sparse speed lines (deterministic so SSR matches the client)
+const STREAKS = Array.from({ length: 5 }, (_, i) => ({
+  y: 150 + ((i * 263) % 760),
+  len: 180 + ((i * 71) % 160),
   dir: i % 2 ? "left" : "right",
-  dur: 3 + ((i * 3) % 5),
-  delay: -((i * 13) % 9),
+  dur: 5 + ((i * 3) % 5),
+  delay: -((i * 7) % 11),
 }));
+
+/**
+ * Plays video1 then video2, then loops back to video1.
+ * Sits in the empty space below the socials.
+ */
+const NgVideo = () => {
+  const [index, setIndex] = useState(0);
+  const ref = useRef<HTMLVideoElement>(null);
+
+  // Re-trigger play when the source changes (some browsers pause on src swap)
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.load();
+    v.play().catch(() => {
+      /* autoplay blocked - user can tap to play */
+    });
+  }, [index]);
+
+  return (
+    <div
+      className="ng-video absolute"
+      style={{
+        left: "8%",
+        right: "8%",
+        bottom: "14%",
+        aspectRatio: "16 / 9",
+        background: "#000",
+        border: "1px solid rgba(57,255,20,0.55)",
+        boxShadow: "0 0 28px rgba(57,255,20,0.18)",
+        // angled top-right and bottom-left corners for a sharper, techy look
+        clipPath:
+          "polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))",
+      }}
+    >
+      <video
+        ref={ref}
+        src={VIDEOS[index]}
+        autoPlay
+        muted
+        playsInline
+        preload="metadata"
+        onEnded={() => setIndex((n) => (n + 1) % VIDEOS.length)}
+        onClick={(e) => {
+          const v = e.currentTarget;
+          v.paused ? v.play() : v.pause();
+        }}
+        className="w-full h-full object-cover cursor-pointer"
+      />
+    </div>
+  );
+};
 
 const Artwork = () => (
-  <svg
-    viewBox="0 0 1024 1536"
-    preserveAspectRatio="xMidYMid slice"
-    aria-hidden="true"
-    className="absolute inset-0 w-full h-full pointer-events-none"
-  >
-    <defs>
-      <linearGradient id="ng-bg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#040b07" />
-        <stop offset=".55" stopColor="#06140c" />
-        <stop offset="1" stopColor="#020604" />
-      </linearGradient>
-      <radialGradient id="ng-glow-top" cx=".5" cy="0" r=".7">
-        <stop offset="0" stopColor={GREEN} stopOpacity=".18" />
-        <stop offset="1" stopColor={GREEN} stopOpacity="0" />
-      </radialGradient>
-      <linearGradient id="ng-horizon" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor={GREEN} stopOpacity="0" />
-        <stop offset="1" stopColor={GREEN} stopOpacity=".28" />
-      </linearGradient>
-      <linearGradient id="ng-road" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#07140c" />
-        <stop offset="1" stopColor="#020604" />
-      </linearGradient>
-      <linearGradient id="ng-fade" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#fff" stopOpacity="1" />
-        <stop offset="1" stopColor="#fff" stopOpacity="0" />
-      </linearGradient>
-      <mask id="ng-mesh-mask">
-        <rect width="1024" height="1000" fill="url(#ng-fade)" />
-      </mask>
-      <pattern
-        id="ng-mesh"
-        width="24"
-        height="21"
-        patternUnits="userSpaceOnUse"
-      >
-        <path
-          d="M12 0 L24 6 V15 L12 21 L0 15 V6Z"
-          fill="none"
-          stroke={GREEN}
-          strokeWidth="1"
-        />
-      </pattern>
-      <linearGradient id="ng-trail" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stopColor="currentColor" stopOpacity="0" />
-        <stop offset="1" stopColor="currentColor" stopOpacity=".9" />
-      </linearGradient>
-
-      {/* Sleek line-art sports car, faces right. Colour from currentColor */}
-      <symbol id="ng-icon" viewBox="0 0 160 40" overflow="visible">
-        <path
-          d="M4 31 L10 25 L50 19 L74 6 Q78 4 84 4 H108 L136 18 L154 23 Q158 25 158 29 V31 Z"
-          fill="currentColor"
-          fillOpacity=".14"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M80 8 H106 L128 18 H64Z"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M2 14 H30 M2 14 L8 25"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <circle
-          cx="38"
-          cy="31"
-          r="7"
-          fill="#030806"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <circle
-          cx="124"
-          cy="31"
-          r="7"
-          fill="#030806"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <rect x="148" y="21" width="9" height="3" rx="1.5" fill="#fff" />
-      </symbol>
-    </defs>
-
-    {/* Base */}
-    <rect width="1024" height="1536" fill="url(#ng-bg)" />
-    <rect width="1024" height="800" fill="url(#ng-glow-top)" />
-    <rect
-      width="1024"
-      height="1000"
-      fill="url(#ng-mesh)"
-      opacity=".1"
-      mask="url(#ng-mesh-mask)"
-    />
-
-    {/* Skyline */}
-    <rect y="800" width="1024" height="380" fill="url(#ng-horizon)" />
-    {SKYLINE.map(([x, w, top], i) => (
-      <g key={i}>
-        <rect
-          x={x}
-          y={top}
-          width={w}
-          height={1180 - top}
-          fill={i % 2 ? "#071a0f" : "#05110a"}
-        />
-        <path
-          d={`M${x} ${top} H${x + w}`}
-          stroke={GREEN}
-          strokeWidth="1.5"
-          opacity=".5"
-        />
-      </g>
-    ))}
-    {WINDOWS.map((w, i) => (
-      <rect
-        key={i}
-        x={w.x}
-        y={w.y}
-        width="8"
-        height="12"
-        rx="1.5"
-        fill={i % 5 === 0 ? "#fff" : GREEN}
-        opacity={w.o}
-      />
-    ))}
-
-    {/* Road */}
-    <rect y="1180" width="1024" height="356" fill="url(#ng-road)" />
-    <path d="M0 1180 H1024" stroke={GREEN} strokeWidth="2" opacity=".6" />
-    <path
-      d="M512 1180 L260 1536 M512 1180 L764 1536"
-      stroke={GREEN}
-      strokeWidth="1.5"
-      opacity=".18"
-    />
-    <path
-      className="ng-lane"
-      d="M0 1310 H1024"
-      stroke={GREEN}
-      strokeWidth="3"
-      strokeDasharray="70 70"
-      opacity=".4"
-    />
-    <path
-      className="ng-lane"
-      d="M0 1430 H1024"
-      stroke={LIME}
-      strokeWidth="3"
-      strokeDasharray="70 70"
-      opacity=".25"
-    />
-    {[140, 360, 580, 800].map((x, i) => (
-      <rect
-        key={x}
-        className="ng-glint"
-        style={{ animationDelay: `${i * 0.9}s` }}
-        x={x}
-        y={1240 + (i % 2) * 80}
-        width="90"
-        height="2.5"
-        rx="1.2"
-        fill={GREEN}
-      />
-    ))}
-
-    {/* Speed streaks */}
-    {STREAKS.map((s, i) => (
-      <g
-        key={i}
-        className="ng-moving"
-        transform={`translate(0 ${s.y})`}
-        opacity=".5"
-      >
-        <g
-          className={s.dir === "left" ? "ng-left" : "ng-right"}
-          style={{
-            animationDuration: `${s.dur}s`,
-            animationDelay: `${s.delay}s`,
-            color: i % 3 === 0 ? LIME : GREEN,
-          }}
-        >
+  <>
+    <svg
+      viewBox="0 0 1024 1536"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+      className="absolute inset-0 w-full h-full pointer-events-none"
+    >
+      <defs>
+        <linearGradient id="ng-bg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#040b07" />
+          <stop offset=".6" stopColor="#050f09" />
+          <stop offset="1" stopColor="#020604" />
+        </linearGradient>
+        <radialGradient id="ng-glow-top" cx=".5" cy="0" r=".7">
+          <stop offset="0" stopColor={GREEN} stopOpacity=".16" />
+          <stop offset="1" stopColor={GREEN} stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="ng-horizon" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={GREEN} stopOpacity="0" />
+          <stop offset="1" stopColor={GREEN} stopOpacity=".22" />
+        </linearGradient>
+        <linearGradient id="ng-hline" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor={GREEN} stopOpacity="0" />
+          <stop offset=".5" stopColor={GREEN} stopOpacity=".9" />
+          <stop offset="1" stopColor={GREEN} stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id="ng-fade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="1" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id="ng-floor-fade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset=".25" stopColor="#fff" stopOpacity="1" />
+          <stop offset="1" stopColor="#fff" stopOpacity=".5" />
+        </linearGradient>
+        <mask id="ng-mesh-mask">
+          <rect width="1024" height="1100" fill="url(#ng-fade)" />
+        </mask>
+        <mask id="ng-floor-mask">
           <rect
-            x={s.dir === "left" ? 0 : -s.len}
-            y="0"
-            width={s.len}
-            height="2"
-            fill="url(#ng-trail)"
-            transform={
-              s.dir === "left" ? `translate(${s.len} 0) scale(-1 1)` : undefined
-            }
+            y={HORIZON}
+            width="1024"
+            height={BOTTOM - HORIZON}
+            fill="url(#ng-floor-fade)"
           />
-        </g>
-      </g>
-    ))}
+        </mask>
+        <pattern
+          id="ng-mesh"
+          width="24"
+          height="21"
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            d="M12 0 L24 6 V15 L12 21 L0 15 V6Z"
+            fill="none"
+            stroke={GREEN}
+            strokeWidth="1"
+          />
+        </pattern>
+        <linearGradient id="ng-trail" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor={GREEN} stopOpacity="0" />
+          <stop offset="1" stopColor={GREEN} stopOpacity=".9" />
+        </linearGradient>
+      </defs>
 
-    {/* Sleek driving cars */}
-    {CARS.map((c, i) => (
-      <g
-        key={i}
-        className="ng-moving"
-        transform={`translate(0 ${c.y})`}
-        opacity={c.opacity}
-      >
+      {/* Base */}
+      <rect width="1024" height="1536" fill="url(#ng-bg)" />
+      <rect width="1024" height="800" fill="url(#ng-glow-top)" />
+      <rect
+        width="1024"
+        height="1100"
+        fill="url(#ng-mesh)"
+        opacity=".07"
+        mask="url(#ng-mesh-mask)"
+      />
+
+      {/* Two slanted hairlines, a quiet racing-stripe nod */}
+      <g stroke={GREEN} strokeWidth="1.2" opacity=".22" fill="none">
+        <path d="M760 44 L980 330" />
+        <path d="M800 44 L980 278" />
+      </g>
+
+      {/* Sparse speed lines */}
+      {STREAKS.map((s, i) => (
         <g
-          className={c.dir === "left" ? "ng-left" : "ng-right"}
-          style={{
-            animationDuration: `${c.dur}s`,
-            animationDelay: `${c.delay}s`,
-            color: i % 4 === 0 ? LIME : GREEN,
-          }}
+          key={i}
+          className="ng-moving"
+          transform={`translate(0 ${s.y})`}
+          opacity=".35"
         >
           <g
-            transform={`scale(${c.dir === "left" ? -c.scale : c.scale} ${c.scale})`}
+            className={s.dir === "left" ? "ng-left" : "ng-right"}
+            style={{
+              animationDuration: `${s.dur}s`,
+              animationDelay: `${s.delay}s`,
+            }}
           >
             <rect
-              x="-170"
-              y="21"
-              width="170"
-              height="3"
+              x="0"
+              y="0"
+              width={s.len}
+              height="1.5"
               fill="url(#ng-trail)"
+              transform={
+                s.dir === "left"
+                  ? `translate(${s.len} 0) scale(-1 1)`
+                  : undefined
+              }
             />
-            <rect
-              x="-120"
-              y="27"
-              width="120"
-              height="2"
-              fill="url(#ng-trail)"
-              opacity=".6"
-            />
-            <g className="ng-car">
-              <use href="#ng-icon" width="160" height="40" />
-            </g>
           </g>
         </g>
-      </g>
-    ))}
+      ))}
 
-    {/* Frame */}
-    <rect
-      x="44"
-      y="44"
-      width="936"
-      height="1448"
-      rx="22"
-      fill="none"
-      stroke={GREEN}
-      strokeWidth="1.2"
-      opacity=".4"
-    />
-  </svg>
+      {/* Horizon glow */}
+      <rect
+        y={HORIZON - 160}
+        width="1024"
+        height="160"
+        fill="url(#ng-horizon)"
+      />
+      <rect
+        className="ng-pulse"
+        x="60"
+        y={HORIZON - 1}
+        width="904"
+        height="2"
+        fill="url(#ng-hline)"
+      />
+
+      {/* Perspective grid floor */}
+      <g mask="url(#ng-floor-mask)" stroke={GREEN} fill="none">
+        {H_LINES.map((y, i) => (
+          <path key={i} d={`M0 ${y} H1024`} strokeWidth="1" opacity=".28" />
+        ))}
+        {V_LINES.map((dx, i) => (
+          <path
+            key={i}
+            d={`M${VP_X} ${HORIZON} L${VP_X + dx * 3.2} ${BOTTOM}`}
+            strokeWidth="1"
+            opacity=".22"
+          />
+        ))}
+      </g>
+
+      {/* Angular corner brackets */}
+      <g
+        stroke={GREEN}
+        strokeWidth="3"
+        fill="none"
+        strokeLinecap="square"
+        opacity=".85"
+      >
+        <path d="M44 110 V44 H110" />
+        <path d="M914 44 H980 V110" />
+        <path d="M44 1426 V1492 H110" />
+        <path d="M914 1492 H980 V1426" />
+      </g>
+
+      {/* Hairline frame */}
+      <rect
+        x="44"
+        y="44"
+        width="936"
+        height="1448"
+        fill="none"
+        stroke={GREEN}
+        strokeWidth="1"
+        opacity=".18"
+      />
+    </svg>
+
+    {/* Video in the empty space below the socials */}
+    <NgVideo />
+  </>
 );
 
 export const NeonGarage: React.FC<Props> = ({ user }) => (
