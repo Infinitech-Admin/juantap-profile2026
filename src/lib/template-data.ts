@@ -55,6 +55,7 @@ import { ConfettiParty } from "@/components/template-previews/confetti-party";
 import { SlateGeometric } from "@/components/template-previews/slate-geometric";
 import { MidnightCity } from "@/components/template-previews/midnight-city";
 import { NeonGarage } from "@/components/template-previews/neon-garage"; // NEW - car trading
+import { AutoPrime } from "@/components/template-previews/auto-prime"; // NEW - car trading (free)
 // Add more template imports as you create them
 
 export interface Template {
@@ -154,6 +155,7 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "slate-geometric": SlateGeometric,
   "midnight-city": MidnightCity,
   "neon-garage": NeonGarage, // NEW - must match the slug in your database
+  "auto-prime": AutoPrime, // NEW - must match the slug in your database
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,

@@ -69,6 +69,7 @@ const PREVIEW_ASPECT: Record<string, string> = {
   "slate-geometric": "aspect-[632/957]",
   "midnight-city": "aspect-[632/957]",
   "neon-garage": "aspect-[632/957]",
+  "auto-prime": "aspect-[632/957]",
 };
 
 export function TemplateCard({ template, user }: TemplateCardProps) {
