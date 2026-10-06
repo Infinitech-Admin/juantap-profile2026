@@ -58,6 +58,7 @@ import { NeonGarage } from "@/components/template-previews/neon-garage"; // NEW 
 import { AutoPrime } from "@/components/template-previews/auto-prime"; // NEW - car trading (free)
 import { MacetroArt } from "@/components/template-previews/macetro-art"; // NEW - art school (premium)
 import { BossAutoExchange } from "@/components/template-previews/boss-auto-exchange";
+import { CapitalJey } from "@/components/template-previews/capital-jey";
 // Add more template imports as you create them
 
 export interface Template {
@@ -160,6 +161,7 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "auto-prime": AutoPrime, // NEW - must match the slug in your database
   "macetro-art": MacetroArt,
   "boss-auto-exchange": BossAutoExchange,
+  "capital-jey": CapitalJey,
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,
