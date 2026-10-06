@@ -34,12 +34,12 @@ const THEME: CardTheme = {
 };
 
 // Files live in /public, so they are served from the site root.
-const VIDEOS = ["/video1.mp4", "/video2.mp4"];
+const VIDEOS = ["/capitaljey/video1.mp4", "/capitaljey/video2.mp4"];
 
 // Images in /public/capital-jey (car1 to car5). Change the extension if yours is not .jpg
 const IMAGES = Array.from(
   { length: 5 },
-  (_, i) => `/capital-jey/car${i + 1}.jpg`,
+  (_, i) => `/capitaljey/car${i + 1}.jpg`,
 );
 
 // Time each image stays on screen (keep at 2000 or more)
