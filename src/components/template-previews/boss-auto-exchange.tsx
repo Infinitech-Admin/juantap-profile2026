@@ -36,10 +36,10 @@ const THEME: CardTheme = {
 };
 
 // Files live in /public, so they are served from the site root.
-const VIDEOS = ["/video1.mp4", "/video2.mp4"];
+const VIDEOS = ["/boss/video1.mp4", "/boss/video2.mp4"];
 
 // Images in /public/boss (car1 to car5). Change the extension if yours is not .jpg
-const IMAGES = Array.from({ length: 5 }, (_, i) => `/boss/car${i + 1}.jpg`);
+const IMAGES = Array.from({ length: 5 }, (_, i) => `/boss/car${i + 1}.png`);
 
 // Time each image stays on screen (keep at 2000 or more)
 const SLIDE_MS = 3000;
