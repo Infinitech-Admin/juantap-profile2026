@@ -71,6 +71,7 @@ const PREVIEW_ASPECT: Record<string, string> = {
   "neon-garage": "aspect-[632/957]",
   "auto-prime": "aspect-[632/957]",
   "macetro-art": "aspect-[632/957]",
+  "boss-auto-exchange": "aspect-[632/957]", // replaces "neon-garage"
 };
 
 export function TemplateCard({ template, user }: TemplateCardProps) {
