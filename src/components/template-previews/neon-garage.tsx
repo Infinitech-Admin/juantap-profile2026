@@ -1,7 +1,7 @@
 "use client";
 
 // src/components/template-previews/neon-garage.tsx
-// Neon Garage - Dark automotive look in neon green: fine hex mesh, perspective grid floor, thin speed lines and a video panel (premium)
+// Neon Garage - Dark automotive look in neon green: fine hex mesh, perspective grid floor, thin speed lines and a media panel (premium)
 // Slug: "neon-garage" - register in src/lib/template-data.ts (TEMPLATE_COMPONENTS)
 // and in TemplateCard.tsx (PREVIEW_ASPECT).
 import React, { useEffect, useRef, useState } from "react";
@@ -86,6 +86,50 @@ const STREAKS = Array.from({ length: 5 }, (_, i) => ({
   dur: 5 + ((i * 3) % 5),
   delay: -((i * 7) % 11),
 }));
+
+const ARROW_STYLE: React.CSSProperties = {
+  width: 28,
+  height: 28,
+  background: "rgba(0,0,0,0.55)",
+  border: "1px solid rgba(255,255,255,0.35)",
+  backdropFilter: "blur(4px)",
+};
+
+/** Round chevron button used for previous / next (video and photo viewer). */
+const ArrowButton = ({
+  dir,
+  onClick,
+}: {
+  dir: "prev" | "next";
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    aria-label={dir === "next" ? "Next" : "Previous"}
+    onClick={(e) => {
+      e.stopPropagation(); // do not toggle play/pause or close the viewer
+      onClick();
+    }}
+    className={`absolute top-1/2 -translate-y-1/2 ${
+      dir === "next" ? "right-2" : "left-2"
+    } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-green-600`}
+    style={ARROW_STYLE}
+  >
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={dir === "next" ? "M9 5 L16 12 L9 19" : "M15 5 L8 12 L15 19"} />
+    </svg>
+  </button>
+);
 
 /** Full-screen viewer for the slider images (click outside, X or Esc to close). */
 const Lightbox = ({
@@ -181,7 +225,7 @@ const Lightbox = ({
 };
 
 /** Auto-advancing image slider with a crossfade, clickable dots and a full-size viewer. */
-const NgSlider = () => {
+const NgSlider = ({ aspect = "16 / 9" }: { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
 
@@ -207,7 +251,7 @@ const NgSlider = () => {
           if (e.key === "Enter" || e.key === " ") setOpen(true);
         }}
         className="relative w-full overflow-hidden rounded-xl pointer-events-auto cursor-zoom-in"
-        style={{ ...PANEL_STYLE, aspectRatio: "16 / 5.5" }}
+        style={{ ...PANEL_STYLE, aspectRatio: aspect }}
       >
         {IMAGES.map((src, i) => (
           <img
@@ -256,52 +300,8 @@ const NgSlider = () => {
   );
 };
 
-const ARROW_STYLE: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  background: "rgba(0,0,0,0.55)",
-  border: "1px solid rgba(255,255,255,0.35)",
-  backdropFilter: "blur(4px)",
-};
-
-/** Round chevron button used for previous / next video. */
-const ArrowButton = ({
-  dir,
-  onClick,
-}: {
-  dir: "prev" | "next";
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    aria-label={dir === "next" ? "Next video" : "Previous video"}
-    onClick={(e) => {
-      e.stopPropagation(); // do not toggle play/pause
-      onClick();
-    }}
-    className={`absolute top-1/2 -translate-y-1/2 ${
-      dir === "next" ? "right-2" : "left-2"
-    } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-green-600`}
-    style={ARROW_STYLE}
-  >
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d={dir === "next" ? "M9 5 L16 12 L9 19" : "M15 5 L8 12 L15 19"} />
-    </svg>
-  </button>
-);
-
 /** Plays video1 then video2, then loops back to video1. */
-const NgVideo = () => {
+const NgVideo = ({ aspect = "16 / 9" }: { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -321,7 +321,7 @@ const NgVideo = () => {
   return (
     <div
       className="relative w-full overflow-hidden rounded-xl"
-      style={{ ...PANEL_STYLE, aspectRatio: "16 / 8.5" }}
+      style={{ ...PANEL_STYLE, aspectRatio: aspect }}
     >
       <video
         ref={ref}
@@ -333,7 +333,8 @@ const NgVideo = () => {
         onEnded={next}
         onClick={(e) => {
           const v = e.currentTarget;
-          v.paused ? v.play() : v.pause();
+          if (v.paused) v.play();
+          else v.pause();
         }}
         className="w-full h-full object-cover cursor-pointer"
       />
@@ -354,23 +355,47 @@ const NgVideo = () => {
   );
 };
 
-/** Image slider on top, video below, both in the empty space under the socials. */
-const NgMedia = () => (
-  <div
-    className="ng-stack absolute flex flex-col gap-2"
-    style={{
-      left: "13%",
-      right: "13%",
-      bottom: "9%",
-      // sit above the card content layer and receive clicks even if the artwork layer ignores them
-      zIndex: 30,
-      pointerEvents: "auto",
-    }}
-  >
-    <NgSlider />
-    <NgVideo />
-  </div>
-);
+/** One compact panel under the socials. Tabs switch between photos and videos. */
+const NgMedia = () => {
+  const [tab, setTab] = useState<"photos" | "videos">("photos");
+
+  const tabBtn = (id: "photos" | "videos", label: string) => (
+    <button
+      type="button"
+      onClick={() => setTab(id)}
+      aria-pressed={tab === id}
+      className="flex-1 rounded-full py-1 text-[11px] font-bold uppercase tracking-wider transition"
+      style={{
+        background: tab === id ? GREEN : "rgba(6,20,12,0.85)",
+        color: tab === id ? "#031006" : "#8fb89a",
+        border: `1px solid ${tab === id ? GREEN : "rgba(57,255,20,0.35)"}`,
+      }}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div
+      className="ng-stack absolute flex flex-col gap-1.5"
+      style={{
+        left: "10%",
+        right: "10%",
+        bottom: "8%", // clears the bottom action bar
+        zIndex: 30,
+        pointerEvents: "auto",
+      }}
+    >
+      <div className="flex gap-2">
+        {tabBtn("photos", "Photos")}
+        {tabBtn("videos", "Videos")}
+      </div>
+
+      {/* Only one is mounted at a time, so the video stops when you switch tabs */}
+      {tab === "photos" ? <NgSlider /> : <NgVideo />}
+    </div>
+  );
+};
 
 const Artwork = () => (
   <>
@@ -544,7 +569,7 @@ const Artwork = () => (
       />
     </svg>
 
-    {/* Image slider + video in the empty space below the socials */}
+    {/* Photos / Videos panel in the empty space below the socials */}
     <NgMedia />
   </>
 );
