@@ -55,6 +55,14 @@ const CSS = `
 }
 `;
 
+const ARROW_STYLE: React.CSSProperties = {
+  width: 28,
+  height: 28,
+  background: "rgba(0,0,0,0.55)",
+  border: "1px solid rgba(255,255,255,0.35)",
+  backdropFilter: "blur(4px)",
+};
+
 /** Full-screen viewer for the slider images (click outside, X or Esc to close). */
 const Lightbox = ({
   index,
@@ -148,8 +156,44 @@ const Lightbox = ({
   );
 };
 
+/** Round chevron button used for previous / next video. */
+const ArrowButton = ({
+  dir,
+  onClick,
+}: {
+  dir: "prev" | "next";
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    aria-label={dir === "next" ? "Next" : "Previous"}
+    onClick={(e) => {
+      e.stopPropagation(); // do not toggle play/pause
+      onClick();
+    }}
+    className={`absolute top-1/2 -translate-y-1/2 ${
+      dir === "next" ? "right-2" : "left-2"
+    } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-red-600`}
+    style={ARROW_STYLE}
+  >
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={dir === "next" ? "M9 5 L16 12 L9 19" : "M15 5 L8 12 L15 19"} />
+    </svg>
+  </button>
+);
+
 /** Auto-advancing image slider with a crossfade, clickable dots and a full-size viewer. */
-const ApSlider = () => {
+const ApSlider = ({aspect = "16 / 9"} : { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
 
@@ -175,7 +219,7 @@ const ApSlider = () => {
           if (e.key === "Enter" || e.key === " ") setOpen(true);
         }}
         className="relative w-full overflow-hidden rounded-xl pointer-events-auto cursor-zoom-in"
-        style={{ ...PANEL_STYLE, aspectRatio: "16 / 5.5" }}
+        style={{ ...PANEL_STYLE, aspectRatio: aspect }}
       >
         {IMAGES.map((src, i) => (
           <img
@@ -224,52 +268,8 @@ const ApSlider = () => {
   );
 };
 
-const ARROW_STYLE: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  background: "rgba(0,0,0,0.55)",
-  border: "1px solid rgba(255,255,255,0.35)",
-  backdropFilter: "blur(4px)",
-};
-
-/** Round chevron button used for previous / next video. */
-const ArrowButton = ({
-  dir,
-  onClick,
-}: {
-  dir: "prev" | "next";
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    aria-label={dir === "next" ? "Next video" : "Previous video"}
-    onClick={(e) => {
-      e.stopPropagation(); // do not toggle play/pause
-      onClick();
-    }}
-    className={`absolute top-1/2 -translate-y-1/2 ${
-      dir === "next" ? "right-2" : "left-2"
-    } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-red-600`}
-    style={ARROW_STYLE}
-  >
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d={dir === "next" ? "M9 5 L16 12 L9 19" : "M15 5 L8 12 L15 19"} />
-    </svg>
-  </button>
-);
-
 /** Plays video1 then video2, then loops back to video1. */
-const ApVideo = () => {
+const ApVideo = ({aspect = "16 / 9"} : { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -289,7 +289,7 @@ const ApVideo = () => {
   return (
     <div
       className="relative w-full overflow-hidden rounded-xl"
-      style={{ ...PANEL_STYLE, aspectRatio: "16 / 8.5" }}
+      style={{ ...PANEL_STYLE, aspectRatio: aspect }}
     >
       <video
         ref={ref}
@@ -322,23 +322,47 @@ const ApVideo = () => {
   );
 };
 
-/** Image slider on top, video below, both in the empty space under the socials. */
-const ApMedia = () => (
-  <div
-    className="ap-stack absolute flex flex-col gap-2"
-    style={{
-      left: "13%",
-      right: "13%",
-      bottom: "9%",
-      // sit above the card content layer and receive clicks even if the artwork layer ignores them
-      zIndex: 30,
-      pointerEvents: "auto",
-    }}
-  >
-    <ApSlider />
-    <ApVideo />
-  </div>
-);
+/** One compact panel under the socials. Tabs switch between photos and videos. */
+const ApMedia = () => {
+  const [tab, setTab] = useState<"photos" | "videos">("photos");
+
+  const tabBtn = (id: "photos" | "videos", label: string) => (
+    <button
+      type="button"
+      onClick={() => setTab(id)}
+      aria-pressed={tab === id}
+      className="flex-1 rounded-full py-1 text-[11px] font-bold uppercase tracking-wider transition"
+      style={{
+        background: tab === id ? RED : "rgba(0,0,0,0.55)",
+        color: tab === id ? "#031006" : "#8fb89a",
+        border: `1px solid ${tab === id ? RED : "rgba(0,0,0,0.55)"}`,
+      }}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div
+      className="ng-stack absolute flex flex-col gap-1.5"
+      style={{
+        left: "10%",
+        right: "10%",
+        bottom: "8%", // clears the bottom action bar
+        zIndex: 30,
+        pointerEvents: "auto",
+      }}
+    >
+      <div className="flex gap-2">
+        {tabBtn("photos", "Photos")}
+        {tabBtn("videos", "Videos")}
+      </div>
+
+      {/* Only one is mounted at a time, so the video stops when you switch tabs */}
+      {tab === "photos" ? <ApSlider /> : <ApVideo />}
+    </div>
+  );
+};
 
 const Artwork = () => (
   <>
