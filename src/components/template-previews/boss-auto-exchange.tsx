@@ -234,6 +234,9 @@ const BaSlider = ({ aspect = "16 / 9" }: { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
 
+  const next = () => setIndex((n) => (n + 1) % IMAGES.length);
+  const prev = () => setIndex((n) => (n - 1 + IMAGES.length) % IMAGES.length);
+
   // Restarts on every change, so tapping a dot also resets the timer.
   // Paused while the full-size viewer is open.
   useEffect(() => {
@@ -269,6 +272,13 @@ const BaSlider = ({ aspect = "16 / 9" }: { aspect?: string }) => {
             style={{ opacity: i === index ? 1 : 0 }}
           />
         ))}
+
+        {IMAGES.length > 1 && (
+          <>
+            <ArrowButton dir="prev" onClick={prev} />
+            <ArrowButton dir="next" onClick={next} />
+          </>
+        )}
 
         {IMAGES.length > 1 && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
@@ -381,7 +391,7 @@ const BaMedia = () => {
 
   return (
     <div
-      className="ng-stack flex w-[86%] flex-col gap-1.5"
+      className="ba-stack flex w-[86%] flex-col gap-1.5"
       style={{
         alignSelf: "center",
         marginTop: "4.4cqw",

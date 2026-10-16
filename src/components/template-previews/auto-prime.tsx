@@ -171,9 +171,8 @@ const ArrowButton = ({
       e.stopPropagation(); // do not toggle play/pause
       onClick();
     }}
-    className={`absolute top-1/2 -translate-y-1/2 ${
-      dir === "next" ? "right-2" : "left-2"
-    } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-red-600`}
+    className={`absolute top-1/2 -translate-y-1/2 ${dir === "next" ? "right-2" : "left-2"
+      } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-red-600`}
     style={ARROW_STYLE}
   >
     <svg
@@ -193,9 +192,12 @@ const ArrowButton = ({
 );
 
 /** Auto-advancing image slider with a crossfade, clickable dots and a full-size viewer. */
-const ApSlider = ({aspect = "16 / 9"} : { aspect?: string }) => {
+const ApSlider = ({ aspect = "16 / 9" }: { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
+
+  const next = () => setIndex((n) => (n + 1) % IMAGES.length);
+  const prev = () => setIndex((n) => (n - 1 + IMAGES.length) % IMAGES.length);
 
   // Restarts on every change, so tapping a dot also resets the timer.
   // Paused while the full-size viewer is open.
@@ -234,6 +236,13 @@ const ApSlider = ({aspect = "16 / 9"} : { aspect?: string }) => {
         ))}
 
         {IMAGES.length > 1 && (
+          <>
+            <ArrowButton dir="prev" onClick={prev} />
+            <ArrowButton dir="next" onClick={next} />
+          </>
+        )}
+
+        {IMAGES.length > 1 && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
             {IMAGES.map((_, i) => (
               <button
@@ -269,7 +278,7 @@ const ApSlider = ({aspect = "16 / 9"} : { aspect?: string }) => {
 };
 
 /** Plays video1 then video2, then loops back to video1. */
-const ApVideo = ({aspect = "16 / 9"} : { aspect?: string }) => {
+const ApVideo = ({ aspect = "16 / 9" }: { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const ref = useRef<HTMLVideoElement>(null);
 
