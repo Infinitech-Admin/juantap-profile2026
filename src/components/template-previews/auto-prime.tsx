@@ -334,7 +334,7 @@ const ApMedia = () => {
       className="flex-1 rounded-full py-1 text-[11px] font-bold uppercase tracking-wider transition"
       style={{
         background: tab === id ? RED : "rgba(0,0,0,0.55)",
-        color: tab === id ? "#031006" : "#8fb89a",
+        color: tab === id ? "#e11d2e" : "#8fb89a",
         border: `1px solid ${tab === id ? RED : "rgba(0,0,0,0.55)"}`,
       }}
     >
@@ -344,13 +344,10 @@ const ApMedia = () => {
 
   return (
     <div
-      className="ng-stack absolute flex flex-col gap-1.5"
+      className="ap-stack flex w-[86%] flex-col gap-1.5"
       style={{
-        left: "10%",
-        right: "10%",
-        bottom: "8%", // clears the bottom action bar
-        zIndex: 30,
-        pointerEvents: "auto",
+        alignSelf: "center",
+        marginTop: "4.4cqw",
       }}
     >
       <div className="flex gap-2">
@@ -411,13 +408,17 @@ const Artwork = () => (
       />
     </svg>
 
-    {/* Image slider + video in the empty space below the socials */}
-    <ApMedia />
   </>
 );
 
 export const AutoPrime: React.FC<Props> = ({ user }) => (
-  <CardShell user={user} theme={THEME} artwork={<Artwork />} artworkCss={CSS} />
+  <CardShell
+    user={user}
+    theme={THEME}
+    artwork={<Artwork />}
+    artworkCss={CSS}
+    afterSocials={<ApMedia />}
+  />
 );
 
 export default AutoPrime;

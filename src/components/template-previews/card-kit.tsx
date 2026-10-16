@@ -265,6 +265,8 @@ interface CardShellProps {
   artwork: React.ReactNode;
   /** Extra CSS for the artwork's own animations */
   artworkCss?: string;
+  /** Optional content rendered after the social links */
+  afterSocials?: React.ReactNode;
 }
 
 export const CardShell: React.FC<CardShellProps> = ({
@@ -272,6 +274,7 @@ export const CardShell: React.FC<CardShellProps> = ({
   theme,
   artwork,
   artworkCss,
+  afterSocials,
 }) => {
   const [showQr, setShowQr] = useState(false);
 
@@ -555,6 +558,8 @@ export const CardShell: React.FC<CardShellProps> = ({
               </div>
             </div>
           )}
+
+          {afterSocials}
 
           <div style={{ height: "8cqw" }} />
         </div>
