@@ -334,7 +334,7 @@ const ApMedia = () => {
       className="flex-1 rounded-full py-1 text-[11px] font-bold uppercase tracking-wider transition"
       style={{
         background: tab === id ? RED : "rgba(0,0,0,0.55)",
-        color: tab === id ? "#e11d2e" : "#8fb89a",
+        color: tab === id ? "#031006" : "#e11d2e",
         border: `1px solid ${tab === id ? RED : "rgba(0,0,0,0.55)"}`,
       }}
     >
@@ -348,6 +348,7 @@ const ApMedia = () => {
       style={{
         alignSelf: "center",
         marginTop: "4.4cqw",
+        pointerEvents: "auto",
       }}
     >
       <div className="flex gap-2">

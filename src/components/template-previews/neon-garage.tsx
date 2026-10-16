@@ -110,9 +110,8 @@ const ArrowButton = ({
       e.stopPropagation(); // do not toggle play/pause or close the viewer
       onClick();
     }}
-    className={`absolute top-1/2 -translate-y-1/2 ${
-      dir === "next" ? "right-2" : "left-2"
-    } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-green-600`}
+    className={`absolute top-1/2 -translate-y-1/2 ${dir === "next" ? "right-2" : "left-2"
+      } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-green-600`}
     style={ARROW_STYLE}
   >
     <svg
@@ -377,12 +376,10 @@ const NgMedia = () => {
 
   return (
     <div
-      className="ng-stack absolute flex flex-col gap-1.5"
+      className="ng-stack flex w-[86%] flex-col gap-1.5"
       style={{
-        left: "10%",
-        right: "10%",
-        bottom: "8%", // clears the bottom action bar
-        zIndex: 30,
+        alignSelf: "center",
+        marginTop: "4.4cqw",
         pointerEvents: "auto",
       }}
     >
@@ -568,14 +565,17 @@ const Artwork = () => (
         opacity=".18"
       />
     </svg>
-
-    {/* Photos / Videos panel in the empty space below the socials */}
-    <NgMedia />
   </>
 );
 
 export const NeonGarage: React.FC<Props> = ({ user }) => (
-  <CardShell user={user} theme={THEME} artwork={<Artwork />} artworkCss={CSS} />
+  <CardShell
+    user={user}
+    theme={THEME}
+    artwork={<Artwork />}
+    artworkCss={CSS}
+    afterSocials={<NgMedia />}
+  />
 );
 
 export default NeonGarage;

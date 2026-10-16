@@ -185,8 +185,52 @@ const Lightbox = ({
   );
 };
 
+
+const ARROW_STYLE: React.CSSProperties = {
+  width: 28,
+  height: 28,
+  background: "rgba(3,26,61,0.7)",
+  border: "1px solid rgba(255,255,255,0.6)",
+  backdropFilter: "blur(4px)",
+};
+
+/** Round chevron button used for previous / next. */
+const ArrowButton = ({
+  dir,
+  onClick,
+}: {
+  dir: "prev" | "next";
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    aria-label={dir === "next" ? "Next" : "Previous"}
+    onClick={(e) => {
+      e.stopPropagation(); // do not toggle play/pause or close viewer
+      onClick();
+    }}
+    className={`absolute top-1/2 -translate-y-1/2 ${dir === "next" ? "right-2" : "left-2"
+      } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-red-600`}
+    style={ARROW_STYLE}
+  >
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={dir === "next" ? "M9 5 L16 12 L9 19" : "M15 5 L8 12 L15 19"} />
+    </svg>
+  </button>
+);
+
 /** Auto-advancing image slider with a crossfade, clickable dots and a full-size viewer. */
-const BaSlider = () => {
+const BaSlider = ({ aspect = "16 / 9" }: { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
 
@@ -212,7 +256,7 @@ const BaSlider = () => {
           if (e.key === "Enter" || e.key === " ") setOpen(true);
         }}
         className="relative w-full overflow-hidden rounded-xl pointer-events-auto cursor-zoom-in"
-        style={{ ...PANEL_STYLE, aspectRatio: "16 / 5.5" }}
+        style={{ ...PANEL_STYLE, aspectRatio: aspect }}
       >
         {IMAGES.map((src, i) => (
           <img
@@ -261,52 +305,8 @@ const BaSlider = () => {
   );
 };
 
-const ARROW_STYLE: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  background: "rgba(3,26,61,0.7)",
-  border: "1px solid rgba(255,255,255,0.6)",
-  backdropFilter: "blur(4px)",
-};
-
-/** Round chevron button used for previous / next. */
-const ArrowButton = ({
-  dir,
-  onClick,
-}: {
-  dir: "prev" | "next";
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    aria-label={dir === "next" ? "Next" : "Previous"}
-    onClick={(e) => {
-      e.stopPropagation(); // do not toggle play/pause or close viewer
-      onClick();
-    }}
-    className={`absolute top-1/2 -translate-y-1/2 ${
-      dir === "next" ? "right-2" : "left-2"
-    } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-red-600`}
-    style={ARROW_STYLE}
-  >
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d={dir === "next" ? "M9 5 L16 12 L9 19" : "M15 5 L8 12 L15 19"} />
-    </svg>
-  </button>
-);
-
 /** Plays video1 then video2, then loops back to video1. */
-const BaVideo = () => {
+const BaVideo = ({ aspect = "16 / 9" }: { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -326,7 +326,7 @@ const BaVideo = () => {
   return (
     <div
       className="relative w-full overflow-hidden rounded-xl"
-      style={{ ...PANEL_STYLE, aspectRatio: "16 / 8.5" }}
+      style={{ ...PANEL_STYLE, aspectRatio: aspect }}
     >
       <video
         ref={ref}
@@ -360,22 +360,44 @@ const BaVideo = () => {
 };
 
 /** Image slider on top, video below, both in the empty space under the socials. */
-const BaMedia = () => (
-  <div
-    className="ba-stack absolute flex flex-col gap-2"
-    style={{
-      left: "13%",
-      right: "13%",
-      bottom: "9%",
-      // sit above the card content layer and receive clicks even if the artwork layer ignores them
-      zIndex: 30,
-      pointerEvents: "auto",
-    }}
-  >
-    <BaSlider />
-    <BaVideo />
-  </div>
-);
+const BaMedia = () => {
+  const [tab, setTab] = useState<"photos" | "videos">("photos");
+
+  const tabBtn = (id: "photos" | "videos", label: string) => (
+    <button
+      type="button"
+      onClick={() => setTab(id)}
+      aria-pressed={tab === id}
+      className="flex-1 rounded-full py-1 text-[11px] font-bold uppercase tracking-wider transition"
+      style={{
+        background: tab === id ? RED : "rgba(3,26,61,0.94)",
+        color: tab === id ? "#031006" : "#d42027",
+        border: `1px solid ${tab === id ? RED : "rgba(3,26,61,0.94)"}`,
+      }}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div
+      className="ng-stack flex w-[86%] flex-col gap-1.5"
+      style={{
+        alignSelf: "center",
+        marginTop: "4.4cqw",
+        pointerEvents: "auto",
+      }}
+    >
+      <div className="flex gap-2">
+        {tabBtn("photos", "Photos")}
+        {tabBtn("videos", "Videos")}
+      </div>
+
+      {/* Only one is mounted at a time, so the video stops when you switch tabs */}
+      {tab === "photos" ? <BaSlider /> : <BaVideo />}
+    </div>
+  );
+};
 
 const Artwork = () => (
   <>
@@ -597,14 +619,16 @@ const Artwork = () => (
         opacity=".22"
       />
     </svg>
-
-    {/* Image slider + video in the empty space below the socials */}
-    <BaMedia />
   </>
 );
 
 export const BossAutoExchange: React.FC<Props> = ({ user }) => (
-  <CardShell user={user} theme={THEME} artwork={<Artwork />} artworkCss={CSS} />
+  <CardShell
+    user={user}
+    theme={THEME}
+    artwork={<Artwork />}
+    artworkCss={CSS}
+    afterSocials={<BaMedia />} />
 );
 
 export default BossAutoExchange;
