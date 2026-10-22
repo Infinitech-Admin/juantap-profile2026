@@ -17,6 +17,12 @@ interface TemplatePreviewSidebarProps {
 export function TemplatePreviewSidebar({
   template,
 }: TemplatePreviewSidebarProps) {
+  const isPremium = template.category === "premium";
+
+  // All registered users are VIP.
+  // Uses the backend flag (has_access) if present, otherwise defaults to true.
+  const isVipPremium = isPremium && ((template as any).has_access ?? true);
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   // Separate loading states
@@ -40,10 +46,9 @@ export function TemplatePreviewSidebar({
   // Backend statuses
   const [savedStatus, setSavedStatus] = useState<
     "saved" | "bought" | "pending" | "free" | null
-  >(template.category === "premium" ? null : "free");
+  >(isPremium && !isVipPremium ? null : "free");
   const [usedStatus, setUsedStatus] = useState<"used" | "unused">("unused");
 
-  const isPremium = template.category === "premium";
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const pathname = usePathname();
 
@@ -69,13 +74,15 @@ export function TemplatePreviewSidebar({
         const found = Array.isArray(data)
           ? data.find((t: any) => t.slug === template.slug)
           : null;
-        if (found) setSavedStatus(found.status);
+        if (found) setSavedStatus(isVipPremium ? "saved" : found.status);
       } catch (err) {
         console.error(err);
       }
     };
 
     const fetchBoughtedTemplates = async () => {
+      // VIP users don't need purchase records (ignore old pending/rejected ones)
+      if (isVipPremium) return;
       try {
         const res = await fetch(`${API_URL}/templates1/boughted`, {
           headers: authHeaders(),
@@ -111,7 +118,7 @@ export function TemplatePreviewSidebar({
       fetchBoughtedTemplates(),
       fetchUsedTemplates(),
     ]).finally(() => setIsLoadingStatus(false));
-  }, [API_URL, template.slug]);
+  }, [API_URL, template.slug, isVipPremium]);
 
   // --- Actions ---
   const saveTemplate = async () => {
@@ -207,7 +214,8 @@ export function TemplatePreviewSidebar({
   };
 
   const handleGetTemplate = () => {
-    if (isPremium) {
+    // Premium template + NOT VIP -> old purchase flow
+    if (isPremium && !isVipPremium) {
       if (savedStatus === "bought") {
         toast.info("You already own this template.");
       } else if (savedStatus === "pending") {
@@ -216,9 +224,11 @@ export function TemplatePreviewSidebar({
         setIsPurchasing(true); // Start loader
         setShowPaymentModal(true);
       }
-    } else {
-      savedStatus === "saved" ? unsaveTemplate() : saveTemplate();
+      return;
     }
+
+    // Free templates and VIP premium templates: simple save / unsave
+    savedStatus === "saved" ? unsaveTemplate() : saveTemplate();
   };
 
   return (
@@ -236,7 +246,18 @@ export function TemplatePreviewSidebar({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-center">
-              {isPremium ? (
+              {isVipPremium ? (
+                <>
+                  <span className="text-3xl font-bold text-purple-600">
+                    VIP Access
+                  </span>
+                  <p className="text-sm text-gray-600">
+                    {savedStatus === "saved"
+                      ? "Already saved"
+                      : "Included with your account"}
+                  </p>
+                </>
+              ) : isPremium ? (
                 <>
                   <span className="text-3xl font-bold text-gray-900">
                     {formatPrice(template.price)}
@@ -265,20 +286,22 @@ export function TemplatePreviewSidebar({
 
             <Button
               onClick={handleGetTemplate}
-              // FIXED: free templates don't wait for the status requests
+              // Free and VIP templates don't wait for the status requests
               disabled={
                 isSavingTemplate ||
                 isPurchasing ||
-                (isPremium && isLoadingStatus)
+                (isPremium && !isVipPremium && isLoadingStatus)
               }
               className={`w-full ${
-                isPremium
+                isPremium && !isVipPremium
                   ? savedStatus === "pending"
                     ? "bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700"
                     : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                   : savedStatus === "saved"
                     ? "bg-red-600 hover:bg-red-700"
-                    : "bg-green-600 hover:bg-green-700"
+                    : isVipPremium
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                      : "bg-green-600 hover:bg-green-700"
               }`}
               size="lg"
             >
@@ -286,7 +309,7 @@ export function TemplatePreviewSidebar({
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               )}
               <Download className="w-4 h-4 mr-2" />
-              {isPremium
+              {isPremium && !isVipPremium
                 ? savedStatus === "bought"
                   ? "Owned"
                   : savedStatus === "pending"
@@ -294,10 +317,15 @@ export function TemplatePreviewSidebar({
                     : "Purchase Template"
                 : savedStatus === "saved"
                   ? "Unsave"
-                  : "Save Free"}
+                  : isVipPremium
+                    ? "Save Template"
+                    : "Save Free"}
             </Button>
-            {/* Used/Unused toggle */}
-            {(savedStatus === "saved" || savedStatus === "bought") && (
+
+            {/* Used/Unused toggle (always available for VIP premium) */}
+            {(savedStatus === "saved" ||
+              savedStatus === "bought" ||
+              isVipPremium) && (
               <Button
                 onClick={toggleUsed}
                 disabled={isTogglingUsed}
@@ -368,20 +396,24 @@ export function TemplatePreviewSidebar({
           </Card>
         )}
       </div>
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => {
-          setShowPaymentModal(false);
-          setIsPurchasing(false); // Stop loader if modal closed
-        }}
-        template={template}
-        onPaymentSuccess={() => {
-          setShowPaymentModal(false);
-          setSavedStatus("bought");
-          setIsPurchasing(false); // Stop loader
-          toast.success("Payment successful! Template unlocked.");
-        }}
-      />
+
+      {/* Payment modal is only needed for non-VIP users */}
+      {!isVipPremium && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setIsPurchasing(false); // Stop loader if modal closed
+          }}
+          template={template}
+          onPaymentSuccess={() => {
+            setShowPaymentModal(false);
+            setSavedStatus("bought");
+            setIsPurchasing(false); // Stop loader
+            toast.success("Payment successful! Template unlocked.");
+          }}
+        />
+      )}
     </>
   );
 }
