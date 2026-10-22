@@ -267,6 +267,12 @@ interface CardShellProps {
   artworkCss?: string;
   /** Optional content rendered after the social links */
   afterSocials?: React.ReactNode;
+  /**
+   * If true, the card grows taller when its content is taller than the 2:3 frame,
+   * instead of clipping it (which hides the bottom action bar on small phones).
+   * Default false, so existing templates are unchanged.
+   */
+  fitContent?: boolean;
 }
 
 export const CardShell: React.FC<CardShellProps> = ({
@@ -275,6 +281,7 @@ export const CardShell: React.FC<CardShellProps> = ({
   artwork,
   artworkCss,
   afterSocials,
+  fitContent = false,
 }) => {
   const [showQr, setShowQr] = useState(false);
 
@@ -373,9 +380,15 @@ export const CardShell: React.FC<CardShellProps> = ({
     >
       <style>{KIT_CSS + (artworkCss ?? "")}</style>
       <div
-        className="relative w-full max-w-lg overflow-clip flex flex-col"
+        className={`relative w-full max-w-lg flex flex-col ${
+          fitContent ? "" : "overflow-clip"
+        }`}
         style={{
           ...cssVars,
+          // fitContent: clip sideways only, so the card can grow downward
+          ...(fitContent
+            ? { overflowX: "clip" as const, overflowY: "visible" as const }
+            : {}),
           aspectRatio: "632 / 957",
           containerType: "inline-size",
           fontFamily: theme.font,

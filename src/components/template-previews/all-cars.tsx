@@ -48,7 +48,9 @@ const IMAGES = Array.from({ length: 5 }, (_, i) => `/all-cars/car${i + 1}.jpg`);
 const SLIDE_MS = 3000;
 
 // Shorter than before (was 4 / 3) so the section fits on short phones.
-const MEDIA_ASPECT = "16 / 10";
+// The real value comes from the --ac-aspect CSS variable (see CSS below),
+// so it gets shorter on small screens.
+const MEDIA_ASPECT = "var(--ac-aspect, 16 / 10)";
 
 // One listing per image above (same order). CHANGE these to your real cars.
 type Listing = {
@@ -115,6 +117,13 @@ const CSS = `
 .ac-lane { animation: ac-lane 1.6s linear infinite; }
 .ac-stack { animation: ac-fade .8s ease .3s both; }
 .ac-slide { transition: opacity .7s ease; }
+
+/* Compact mode: smaller screens get a shorter photo/video panel */
+.ac-stack { --ac-aspect: 16 / 10; }
+@media (max-width: 400px), (max-height: 760px) {
+  .ac-stack { --ac-aspect: 2 / 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ac-lane, .ac-stack { animation: none; }
   .ac-slide { transition: none; }
@@ -551,7 +560,7 @@ const AcMedia = () => {
       {tab === "photos" ? <AcSlider /> : <AcVideo />}
 
       {/* What the dealer does */}
-      <div className="grid grid-cols-3" style={{ gap: "1.75cqw" }}>
+      <div className="ac-chips grid grid-cols-3" style={{ gap: "1.75cqw" }}>
         {["Buy", "Sell", "Trade-in"].map((t) => (
           <span
             key={t}
@@ -691,6 +700,7 @@ export const AllCars: React.FC<Props> = ({ user }) => (
     artwork={<Artwork />}
     artworkCss={CSS}
     afterSocials={<AcMedia />}
+    fitContent
   />
 );
 
