@@ -6,6 +6,10 @@
 // with a Buy / Sell / Trade-in strip, and a road with moving lane dashes as the artwork.
 // Slug: "all-cars" - register in src/lib/template-data.ts (TEMPLATE_COMPONENTS)
 // and in TemplateCard.tsx (PREVIEW_ASPECT).
+//
+// RESPONSIVE NOTE: everything inside the media section (AcMedia) is sized with
+// cqw units. AcMedia is its own size container, so 1cqw = 1% of the media width.
+// That makes text, buttons and spacing scale together with the card on every phone.
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Template, User } from "@/types/template";
@@ -35,14 +39,16 @@ const THEME: CardTheme = {
 };
 
 // Files live in /public, so they are served from the site root.
-// Files live in /public, so they are served from the site root.
 const VIDEOS = ["/all-cars/video1.mp4", "/all-cars/video2.mp4"];
 
-// Images in /public/mikmik (car1 to car5). Change the extension if yours is not .jpg
+// Images in /public/all-cars (car1 to car5). Change the extension if yours is not .jpg
 const IMAGES = Array.from({ length: 5 }, (_, i) => `/all-cars/car${i + 1}.jpg`);
 
 // Time each image stays on screen (keep at 2000 or more)
 const SLIDE_MS = 3000;
+
+// Shorter than before (was 4 / 3) so the section fits on short phones.
+const MEDIA_ASPECT = "16 / 10";
 
 // One listing per image above (same order). CHANGE these to your real cars.
 type Listing = {
@@ -95,12 +101,12 @@ const LISTINGS: Listing[] = [
 const peso = (n: number) =>
   "\u20B1" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
+// Panel with the same angled corners as the car-roof swoosh (corner size scales)
 const PANEL_STYLE: React.CSSProperties = {
   background: "#000",
   border: `1px solid ${GOLD}`,
-  // same angled corners as the car-roof swoosh
   clipPath:
-    "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
+    "polygon(0 0, calc(100% - 4cqw) 0, 100% 4cqw, 100% 100%, 4cqw 100%, 0 calc(100% - 4cqw))",
 };
 
 const CSS = `
@@ -120,49 +126,57 @@ const ROAD_TOP = 1180;
 const ROAD_BOTTOM = 1536;
 const VP_X = 512;
 
-const ARROW_STYLE: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  background: "rgba(0,0,0,0.6)",
-  border: "1px solid rgba(255,255,255,0.35)",
-  backdropFilter: "blur(4px)",
-};
-
-/** Round chevron button used for previous / next (video and photo viewer). */
+/**
+ * Round chevron button used for previous / next.
+ * inCard: sizes scale with the card (cqw). Otherwise fixed px (full-screen viewer,
+ * which is rendered in a portal outside the card).
+ */
 const ArrowButton = ({
   dir,
   onClick,
+  inCard = false,
 }: {
   dir: "prev" | "next";
   onClick: () => void;
-}) => (
-  <button
-    type="button"
-    aria-label={dir === "next" ? "Next" : "Previous"}
-    onClick={(e) => {
-      e.stopPropagation(); // do not toggle play/pause or close the viewer
-      onClick();
-    }}
-    className={`absolute top-1/2 -translate-y-1/2 ${
-      dir === "next" ? "right-2" : "left-2"
-    } flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-yellow-600`}
-    style={ARROW_STYLE}
-  >
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
+  inCard?: boolean;
+}) => {
+  const size = inCard ? "max(8cqw, 24px)" : "40px";
+  const edge = inCard ? "2.3cqw" : "12px";
+
+  return (
+    <button
+      type="button"
+      aria-label={dir === "next" ? "Next" : "Previous"}
+      onClick={(e) => {
+        e.stopPropagation(); // do not toggle play/pause or close the viewer
+        onClick();
+      }}
+      className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full text-white transition hover:scale-110 hover:bg-yellow-600"
+      style={{
+        width: size,
+        height: size,
+        [dir === "next" ? "right" : "left"]: edge,
+        background: "rgba(0,0,0,0.6)",
+        border: "1px solid rgba(255,255,255,0.35)",
+        backdropFilter: "blur(4px)",
+      }}
     >
-      <path d={dir === "next" ? "M9 5 L16 12 L9 19" : "M15 5 L8 12 L15 19"} />
-    </svg>
-  </button>
-);
+      <svg
+        width="55%"
+        height="55%"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d={dir === "next" ? "M9 5 L16 12 L9 19" : "M15 5 L8 12 L15 19"} />
+      </svg>
+    </button>
+  );
+};
 
 /** Full-screen viewer for the slider images (click outside, X or Esc to close). */
 const Lightbox = ({
@@ -243,7 +257,7 @@ const Lightbox = ({
       {LISTINGS[index] && (
         <div
           className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full px-4 py-1.5 text-sm font-bold text-black"
-          style={{ background: GOLD }}
+          style={{ background: GOLD, maxWidth: "70vw" }}
           onClick={(e) => e.stopPropagation()}
         >
           {LISTINGS[index].name} · {peso(LISTINGS[index].price)}
@@ -270,12 +284,16 @@ const Lightbox = ({
 /** Corner ribbon: For sale (gold) or Sold (white). */
 const Ribbon = ({ status = "sale" }: { status?: "sale" | "sold" }) => (
   <span
-    className="absolute left-0 top-3 px-3 py-0.5 text-[11px] font-extrabold"
+    className="absolute left-0 font-extrabold"
     style={{
+      top: "3.5cqw",
+      fontSize: "3.2cqw",
+      lineHeight: 1.3,
+      padding: "0.6cqw 4cqw 0.6cqw 3.5cqw",
       background: status === "sold" ? WHITE : GOLD,
       color: "#000",
-      clipPath: "polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%)",
-      paddingRight: 14,
+      clipPath:
+        "polygon(0 0, 100% 0, calc(100% - 2.3cqw) 50%, 100% 100%, 0 100%)",
     }}
   >
     {status === "sold" ? "Sold" : "For sale"}
@@ -287,26 +305,38 @@ const ListingCaption = ({ item }: { item?: Listing }) => {
   if (!item) return null;
   return (
     <div
-      className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 px-3 pb-5 pt-8"
+      className="absolute inset-x-0 bottom-0 flex items-end justify-between"
       style={{
+        gap: "2.3cqw",
+        padding: "9cqw 3.5cqw 6cqw",
         background:
           "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0) 100%)",
       }}
     >
       <div className="min-w-0">
-        <p className="truncate text-[12px] font-bold leading-tight text-white">
+        <p
+          className="truncate font-bold text-white"
+          style={{ fontSize: "3.5cqw", lineHeight: 1.25 }}
+        >
           {item.name}
         </p>
         <p
-          className="truncate text-[10px] leading-tight"
-          style={{ color: "#d6cfb4" }}
+          className="truncate"
+          style={{ fontSize: "2.9cqw", lineHeight: 1.25, color: "#d6cfb4" }}
         >
           {item.year} · {item.mileage} · {item.trans}
         </p>
       </div>
       <span
-        className="shrink-0 rounded px-2 py-0.5 text-[13px] font-extrabold"
-        style={{ background: GOLD, color: "#000" }}
+        className="shrink-0 font-extrabold"
+        style={{
+          fontSize: "3.8cqw",
+          lineHeight: 1.2,
+          padding: "0.6cqw 2.3cqw",
+          borderRadius: "1.2cqw",
+          background: GOLD,
+          color: "#000",
+        }}
       >
         {peso(item.price)}
       </span>
@@ -315,7 +345,7 @@ const ListingCaption = ({ item }: { item?: Listing }) => {
 };
 
 /** Auto-advancing listing slider with a crossfade, clickable dots and a full-size viewer. */
-const AcSlider = ({ aspect = "4 / 3" }: { aspect?: string }) => {
+const AcSlider = ({ aspect = MEDIA_ASPECT }: { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
 
@@ -345,7 +375,7 @@ const AcSlider = ({ aspect = "4 / 3" }: { aspect?: string }) => {
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") setOpen(true);
         }}
-        className="relative w-full overflow-hidden rounded-xl pointer-events-auto cursor-zoom-in"
+        className="relative w-full overflow-hidden pointer-events-auto cursor-zoom-in"
         style={{ ...PANEL_STYLE, aspectRatio: aspect }}
       >
         {IMAGES.map((src, i) => (
@@ -365,13 +395,16 @@ const AcSlider = ({ aspect = "4 / 3" }: { aspect?: string }) => {
 
         {IMAGES.length > 1 && (
           <>
-            <ArrowButton dir="prev" onClick={prev} />
-            <ArrowButton dir="next" onClick={next} />
+            <ArrowButton dir="prev" onClick={prev} inCard />
+            <ArrowButton dir="next" onClick={next} inCard />
           </>
         )}
 
         {IMAGES.length > 1 && (
-          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+          <div
+            className="absolute left-0 right-0 flex justify-center"
+            style={{ bottom: "2cqw", gap: "1.75cqw" }}
+          >
             {IMAGES.map((_, i) => (
               <button
                 key={i}
@@ -383,8 +416,9 @@ const AcSlider = ({ aspect = "4 / 3" }: { aspect?: string }) => {
                 }}
                 className="rounded-full"
                 style={{
-                  width: i === index ? 18 : 6,
-                  height: 6,
+                  width: i === index ? "5.2cqw" : "1.75cqw",
+                  height: "1.75cqw",
+                  minHeight: 4,
                   background: i === index ? GOLD : "rgba(255,255,255,0.6)",
                   transition: "width .3s ease, background .3s ease",
                 }}
@@ -406,7 +440,7 @@ const AcSlider = ({ aspect = "4 / 3" }: { aspect?: string }) => {
 };
 
 /** Plays video1 then video2, then loops back to video1. */
-const AcVideo = ({ aspect = "4 / 3" }: { aspect?: string }) => {
+const AcVideo = ({ aspect = MEDIA_ASPECT }: { aspect?: string }) => {
   const [index, setIndex] = useState(0);
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -425,7 +459,7 @@ const AcVideo = ({ aspect = "4 / 3" }: { aspect?: string }) => {
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-xl"
+      className="relative w-full overflow-hidden"
       style={{ ...PANEL_STYLE, aspectRatio: aspect }}
     >
       <video
@@ -446,11 +480,18 @@ const AcVideo = ({ aspect = "4 / 3" }: { aspect?: string }) => {
 
       {VIDEOS.length > 1 && (
         <>
-          <ArrowButton dir="prev" onClick={prev} />
-          <ArrowButton dir="next" onClick={next} />
+          <ArrowButton dir="prev" onClick={prev} inCard />
+          <ArrowButton dir="next" onClick={next} inCard />
           <span
-            className="absolute bottom-2 right-3 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
-            style={{ background: "rgba(0,0,0,0.55)" }}
+            className="absolute font-semibold text-white"
+            style={{
+              bottom: "2cqw",
+              right: "3.5cqw",
+              fontSize: "2.9cqw",
+              padding: "0.6cqw 2.3cqw",
+              borderRadius: 999,
+              background: "rgba(0,0,0,0.55)",
+            }}
           >
             {index + 1} / {VIDEOS.length}
           </span>
@@ -469,8 +510,12 @@ const AcMedia = () => {
       type="button"
       onClick={() => setTab(id)}
       aria-pressed={tab === id}
-      className="flex-1 rounded-full py-1 text-[11px] font-bold transition"
+      className="flex-1 font-bold transition"
       style={{
+        fontSize: "3.2cqw",
+        lineHeight: 1.3,
+        padding: "1.2cqw 0",
+        borderRadius: 999,
         background: tab === id ? GOLD : "rgba(18,16,8,0.9)",
         color: tab === id ? "#000" : "#b9b29a",
         border: `1px solid ${tab === id ? GOLD : "rgba(217,179,0,0.4)"}`,
@@ -482,14 +527,22 @@ const AcMedia = () => {
 
   return (
     <div
-      className="ac-stack flex w-[86%] flex-col gap-1.5"
-      style={{
-        alignSelf: "center",
-        marginTop: "4.4cqw",
-        pointerEvents: "auto",
-      }}
+      className="ac-stack flex flex-col"
+      style={
+        {
+          width: "86%",
+          maxWidth: "100%",
+          alignSelf: "center",
+          // Own size container: all cqw units inside are relative to THIS width,
+          // so the section scales with the card on every phone.
+          containerType: "inline-size",
+          gap: "1.75cqw",
+          marginTop: "3cqw",
+          pointerEvents: "auto",
+        } as React.CSSProperties
+      }
     >
-      <div className="flex gap-2">
+      <div className="flex" style={{ gap: "2.3cqw" }}>
         {tabBtn("photos", "Cars for sale")}
         {tabBtn("videos", "Walkarounds")}
       </div>
@@ -498,12 +551,16 @@ const AcMedia = () => {
       {tab === "photos" ? <AcSlider /> : <AcVideo />}
 
       {/* What the dealer does */}
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-3" style={{ gap: "1.75cqw" }}>
         {["Buy", "Sell", "Trade-in"].map((t) => (
           <span
             key={t}
-            className="rounded-md py-1 text-center text-[11px] font-bold"
+            className="text-center font-bold"
             style={{
+              fontSize: "3.2cqw",
+              lineHeight: 1.3,
+              padding: "1.2cqw 0",
+              borderRadius: "1.75cqw",
               color: GOLD,
               border: "1px solid rgba(217,179,0,0.4)",
               background: "rgba(18,16,8,0.85)",
