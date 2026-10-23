@@ -113,7 +113,7 @@ export default function ClaimCard({
           <p className="mt-1 text-sm text-gray-600">
             {step === 1
               ? "Activate your card. Enter your email and we'll send you a verification code."
-              : `We sent a 6-digit code to ${maskedEmail}.`}
+              : `We sent a 6-character code to ${maskedEmail}.`}
           </p>
         </div>
 
@@ -152,12 +152,15 @@ export default function ClaimCard({
               <input
                 className={inputClass}
                 value={emailCode}
-                inputMode="numeric"
+                inputMode="text"
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="one-time-code"
                 maxLength={6}
                 required
-                placeholder="6-digit code"
+                placeholder="6-character code"
                 onChange={(e) =>
-                  setEmailCode(e.target.value.replace(/\D/g, ""))
+                  setEmailCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))
                 }
               />
               {err("email_code")}
