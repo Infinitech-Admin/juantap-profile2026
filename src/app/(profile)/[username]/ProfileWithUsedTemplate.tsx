@@ -6,7 +6,7 @@ import { TemplatePreviewSidebar } from "@/components/templates/template-preview-
 
 interface TemplatePageProps {
   params: {
-    username: string; // ✅ Fixed
+    username: string; 
   };
 }
 
@@ -16,7 +16,7 @@ export default async function ProfileWithUsedTemplate({
   const username = params.username; // This is "jmdec22"
   
   // 1. Fetch the user's profile data
-  const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/${username}`); // ✅ Fixed
+  const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/${username}`); 
   const userData = await userResponse.json();
   
   if (!userData) {
