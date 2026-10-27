@@ -31,6 +31,18 @@ export function TemplatePreviewSidebar({
   const [isTogglingUsed, setIsTogglingUsed] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
 
+  // Agents cannot change their template (managed by admin)
+  const [isAgent, setIsAgent] = useState(false);
+
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      setIsAgent(!!u.is_agent);
+    } catch {
+      setIsAgent(false);
+    }
+  }, []);
+
   const formatPrice = (value: number | string | null | undefined) => {
     if (!value) return "₱0.00";
     const num = Number(value);
@@ -59,6 +71,12 @@ export function TemplatePreviewSidebar({
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     };
+  };
+
+  // Shows the backend message on 403 (e.g. "Your template is managed by your admin.")
+  const failMessage = async (res: Response, fallback: string) => {
+    const data = await res.json().catch(() => ({}));
+    return res.status === 403 && data.message ? data.message : fallback;
   };
 
   // --- Fetch initial statuses ---
@@ -128,7 +146,10 @@ export function TemplatePreviewSidebar({
         method: "POST",
         headers: authHeaders(),
       });
-      if (!res.ok) throw new Error("Failed to save template");
+      if (!res.ok) {
+        toast.error(await failMessage(res, "Error saving template"));
+        return;
+      }
       toast.success("Template saved!");
       setSavedStatus("saved");
     } catch {
@@ -145,7 +166,10 @@ export function TemplatePreviewSidebar({
         method: "DELETE",
         headers: authHeaders(),
       });
-      if (!res.ok) throw new Error("Failed to unsave template");
+      if (!res.ok) {
+        toast.error(await failMessage(res, "Error removing template"));
+        return;
+      }
       toast.success("Template removed from saved.");
       setSavedStatus("free");
     } catch {
@@ -162,7 +186,10 @@ export function TemplatePreviewSidebar({
         method: "POST",
         headers: authHeaders(),
       });
-      if (!res.ok) throw new Error("Failed to mark as used");
+      if (!res.ok) {
+        toast.error(await failMessage(res, "Error marking template as used"));
+        return;
+      }
       toast.success("Template marked as used!");
       setUsedStatus("used");
     } catch {
@@ -179,7 +206,10 @@ export function TemplatePreviewSidebar({
         method: "DELETE",
         headers: authHeaders(),
       });
-      if (!res.ok) throw new Error("Failed to mark as unused");
+      if (!res.ok) {
+        toast.error(await failMessage(res, "Error marking template as unused"));
+        return;
+      }
       toast.success("Template marked as unused.");
       setUsedStatus("unused");
     } catch {
@@ -284,59 +314,68 @@ export function TemplatePreviewSidebar({
               )}
             </div>
 
-            <Button
-              onClick={handleGetTemplate}
-              // Free and VIP templates don't wait for the status requests
-              disabled={
-                isSavingTemplate ||
-                isPurchasing ||
-                (isPremium && !isVipPremium && isLoadingStatus)
-              }
-              className={`w-full ${
-                isPremium && !isVipPremium
-                  ? savedStatus === "pending"
-                    ? "bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700"
-                    : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  : savedStatus === "saved"
-                    ? "bg-red-600 hover:bg-red-700"
-                    : isVipPremium
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                      : "bg-green-600 hover:bg-green-700"
-              }`}
-              size="lg"
-            >
-              {(isSavingTemplate || isPurchasing) && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
-              <Download className="w-4 h-4 mr-2" />
-              {isPremium && !isVipPremium
-                ? savedStatus === "bought"
-                  ? "Owned"
-                  : savedStatus === "pending"
-                    ? "Pending Approval"
-                    : "Purchase Template"
-                : savedStatus === "saved"
-                  ? "Unsave"
-                  : isVipPremium
-                    ? "Save Template"
-                    : "Save Free"}
-            </Button>
+            {isAgent ? (
+              /* Agents: template is assigned by the admin, no Save / Use buttons */
+              <p className="rounded-md bg-gray-100 p-3 text-center text-sm text-gray-600">
+                Your template is managed by your admin.
+              </p>
+            ) : (
+              <>
+                <Button
+                  onClick={handleGetTemplate}
+                  // Free and VIP templates don't wait for the status requests
+                  disabled={
+                    isSavingTemplate ||
+                    isPurchasing ||
+                    (isPremium && !isVipPremium && isLoadingStatus)
+                  }
+                  className={`w-full ${
+                    isPremium && !isVipPremium
+                      ? savedStatus === "pending"
+                        ? "bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700"
+                        : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                      : savedStatus === "saved"
+                        ? "bg-red-600 hover:bg-red-700"
+                        : isVipPremium
+                          ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                          : "bg-green-600 hover:bg-green-700"
+                  }`}
+                  size="lg"
+                >
+                  {(isSavingTemplate || isPurchasing) && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  <Download className="w-4 h-4 mr-2" />
+                  {isPremium && !isVipPremium
+                    ? savedStatus === "bought"
+                      ? "Owned"
+                      : savedStatus === "pending"
+                        ? "Pending Approval"
+                        : "Purchase Template"
+                    : savedStatus === "saved"
+                      ? "Unsave"
+                      : isVipPremium
+                        ? "Save Template"
+                        : "Save Free"}
+                </Button>
 
-            {/* Used/Unused toggle (always available for VIP premium) */}
-            {(savedStatus === "saved" ||
-              savedStatus === "bought" ||
-              isVipPremium) && (
-              <Button
-                onClick={toggleUsed}
-                disabled={isTogglingUsed}
-                className={`w-full mt-2 ${usedStatus === "used" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
-                size="lg"
-              >
-                {isTogglingUsed && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {/* Used/Unused toggle (always available for VIP premium) */}
+                {(savedStatus === "saved" ||
+                  savedStatus === "bought" ||
+                  isVipPremium) && (
+                  <Button
+                    onClick={toggleUsed}
+                    disabled={isTogglingUsed}
+                    className={`w-full mt-2 ${usedStatus === "used" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
+                    size="lg"
+                  >
+                    {isTogglingUsed && (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    )}
+                    {usedStatus === "used" ? "Mark as Unused" : "Mark as Used"}
+                  </Button>
                 )}
-                {usedStatus === "used" ? "Mark as Unused" : "Mark as Used"}
-              </Button>
+              </>
             )}
 
             <div className="flex gap-2 mt-4">
