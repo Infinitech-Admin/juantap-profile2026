@@ -7,7 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Eye, X, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
-import { User } from "@/types/user";
+
+// Local type, so this page does not depend on "@/types/user"
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  username?: string | null;
+  avatar_url?: string | null;
+  is_admin?: boolean | number;
+  is_agent?: boolean | number;
+}
 
 interface UserProfile {
   bio: string;
@@ -255,7 +265,7 @@ export default function AdminUsersPage() {
         </Badge>
       );
     }
-    if ((user as any).is_agent) {
+    if (user.is_agent) {
       return (
         <Badge className={`bg-emerald-600 text-white ${extraClass}`}>
           Agent
