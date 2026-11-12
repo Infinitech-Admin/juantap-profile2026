@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, X, User as UserIcon } from "lucide-react";
+import { Loader2, Eye, X, Search, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 
@@ -19,13 +19,6 @@ interface User {
   is_agent?: boolean | number;
 }
 
-interface UserProfile {
-  bio: string;
-  phone: string;
-  website: string;
-  location: string;
-}
-
 // Agent info for the selected user (from /admin/users/{id}/agent-info)
 interface AgentInfo {
   is_agent: boolean;
@@ -35,6 +28,11 @@ interface AgentInfo {
   templates: { slug: string; name: string }[];
 }
 
+type RoleFilter = "all" | "admin" | "agent" | "user";
+
+const getRole = (u: User): Exclude<RoleFilter, "all"> =>
+  u.is_admin ? "admin" : u.is_agent ? "agent" : "user";
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,11 +40,40 @@ export default function AdminUsersPage() {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
-  const totalPages = Math.ceil(users.length / pageSize);
-  const paginatedUsers = users.slice(
+
+  // Filters
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+
+  const filteredUsers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return users.filter((u) => {
+      if (roleFilter !== "all" && getRole(u) !== roleFilter) return false;
+      if (!q) return true;
+      return (
+        u.name?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q) ||
+        (u.username ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [users, search, roleFilter]);
+
+  const filtersActive = search.trim() !== "" || roleFilter !== "all";
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
+
+  // Go back to page 1 whenever the filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, roleFilter]);
+
+  const clearFilters = () => {
+    setSearch("");
+    setRoleFilter("all");
+  };
 
   // Agent management (inside the profile modal)
   const [agentUserId, setAgentUserId] = useState<number | null>(null);
@@ -275,13 +302,76 @@ export default function AdminUsersPage() {
     return <Badge className={extraClass}>User</Badge>;
   };
 
+  const emptyMessage = filtersActive
+    ? "No users match your filters."
+    : "No users found.";
+
   return (
-    <div className="space-y-4 sm:space-y-6 px-3 sm:px-6 py-4 sm:py-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6 px-3 sm:px-6 py-4 sm:py-6">
       <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
         User Management
       </h1>
 
-      <Card className="p-0 gap-0 sm:p-6">
+      {/* Filters */}
+      <Card className="min-w-0 p-0 gap-0">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, email or username..."
+                className="w-full min-w-0 rounded-md border border-gray-300 bg-white py-2 pl-9 pr-9 text-sm"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label="Clear search"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm sm:w-40"
+              aria-label="Filter by role"
+            >
+              <option value="all">All roles</option>
+              <option value="admin">Admin</option>
+              <option value="agent">Agent</option>
+              <option value="user">User</option>
+            </select>
+
+            {filtersActive && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="shrink-0"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+
+          {!isLoading && (
+            <p className="mt-2 text-xs text-gray-500">
+              {filtersActive
+                ? `${filteredUsers.length} of ${users.length} users`
+                : `${users.length} users`}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 p-0 gap-0 sm:p-6">
         <CardContent className="p-0 sm:p-6">
           {isLoading ? (
             <div className="flex justify-center py-10">
@@ -365,7 +455,7 @@ export default function AdminUsersPage() {
                           colSpan={5}
                           className="py-8 text-center text-gray-500"
                         >
-                          No users found.
+                          {emptyMessage}
                         </td>
                       </tr>
                     )}
@@ -427,7 +517,7 @@ export default function AdminUsersPage() {
                   ))
                 ) : (
                   <div className="py-8 text-center text-gray-500 text-sm">
-                    No users found.
+                    {emptyMessage}
                   </div>
                 )}
               </div>
