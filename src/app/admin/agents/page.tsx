@@ -250,7 +250,7 @@ export default function AdminAgentsPage() {
   };
 
   return (
-    <div className="mx-auto min-w-0 w-full max-w-7xl space-y-4 px-3 py-4 sm:px-6 sm:py-6">
+    <div className="min-w-0 w-full max-w-7xl space-y-4 px-3 py-4 sm:px-6 sm:py-6">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           Register Agents
