@@ -14,19 +14,20 @@ export default function AdminLayout({
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <AdminSidebar 
-        isOpen={isSidebarOpen} 
+    <div className="flex min-h-screen w-full bg-gray-50">
+      <AdminSidebar
+        isOpen={isSidebarOpen}
         setIsOpen={setSidebarOpen}
         collapsed={isSidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
       />
 
-      <main 
-        className={`flex-1 p-4 transition-all duration-300 ${
+      {/* min-w-0 lets this flex child shrink below its content width */}
+      <main
+        className={`min-w-0 flex-1 overflow-x-hidden p-4 transition-all duration-300 ${
           isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
         }`}
-      > 
+      >
         {/* Mobile toggle button */}
         <div className="md:hidden mb-4">
           <Button onClick={() => setSidebarOpen(true)}>
@@ -38,4 +39,4 @@ export default function AdminLayout({
       </main>
     </div>
   );
-} 
+}
