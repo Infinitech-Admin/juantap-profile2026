@@ -96,6 +96,9 @@ const randomRow = (template_slug = ""): Row => ({
   template_slug,
 });
 
+const fieldClass =
+  "w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm";
+
 export default function AdminAgentsPage() {
   const [templates, setTemplates] = useState<TemplateOption[]>([]);
   const [defaultSlug, setDefaultSlug] = useState("");
@@ -138,7 +141,7 @@ export default function AdminAgentsPage() {
   }, []);
 
   const generate = () => {
-    const n = Math.min(Math.max(count, 1), 200);
+    const n = Math.min(Math.max(count || 1, 1), 200);
     setRows(Array.from({ length: n }, () => randomRow()));
     setCreated([]);
   };
@@ -152,6 +155,15 @@ export default function AdminAgentsPage() {
       ),
     );
 
+  const rerollAll = () =>
+    setRows((prev) =>
+      prev.map((r) => ({
+        ...r,
+        firstname: pick(FIRST_NAMES),
+        lastname: pick(LAST_NAMES),
+      })),
+    );
+
   const updateRow = (key: number, patch: Partial<Row>) =>
     setRows((prev) =>
       prev.map((r) => (r.key === key ? { ...r, ...patch } : r)),
@@ -160,7 +172,6 @@ export default function AdminAgentsPage() {
   const removeRow = (key: number) =>
     setRows((prev) => prev.filter((r) => r.key !== key));
 
-  // Apply one template to every row
   const applyTemplateToAll = (slug: string) =>
     setRows((prev) => prev.map((r) => ({ ...r, template_slug: slug })));
 
@@ -222,6 +233,8 @@ export default function AdminAgentsPage() {
     }
   };
 
+  const copyAll = () => copy(created.map((c) => c.nfc_url).join("\n"));
+
   const downloadCsv = () => {
     const lines = [
       ["name", "card_code", "nfc_url", "template"],
@@ -237,139 +250,173 @@ export default function AdminAgentsPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-3 sm:px-6 py-4 sm:py-6">
-      <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-        Register Agents
-      </h1>
+    <div className="mx-auto min-w-0 w-full max-w-4xl space-y-4 px-3 py-4 sm:px-6 sm:py-6">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Register Agents
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Generate names, pick a template, then register. Each agent gets an NFC
+          link.
+        </p>
+      </div>
 
-      {/* Controls */}
-      <Card>
-        <CardContent className="p-4 sm:p-6 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">
-                How many agents?
-              </label>
+      {/* Controls: one compact bar */}
+      <Card className="min-w-0">
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="sm:w-24">
+              <label className="mb-1 block text-xs text-gray-500">Count</label>
               <input
                 type="number"
                 min={1}
                 max={200}
                 value={count}
                 onChange={(e) => setCount(Number(e.target.value))}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className={fieldClass}
               />
             </div>
-            <div className="sm:col-span-2">
-              <label className="text-xs text-gray-500 block mb-1">
+            <div className="min-w-0 sm:w-56">
+              <label className="mb-1 block text-xs text-gray-500">
                 Default template
               </label>
-              <div className="flex gap-2">
-                <select
-                  value={defaultSlug}
-                  onChange={(e) => setDefaultSlug(e.target.value)}
-                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
-                >
-                  {templates.map((t) => (
-                    <option key={t.slug} value={t.slug}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-                <Button
-                  variant="outline"
-                  disabled={rows.length === 0}
-                  onClick={() => applyTemplateToAll(defaultSlug)}
-                >
-                  Apply to all
-                </Button>
-              </div>
+              <select
+                value={defaultSlug}
+                onChange={(e) => setDefaultSlug(e.target.value)}
+                className={fieldClass}
+              >
+                {templates.map((t) => (
+                  <option key={t.slug} value={t.slug}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={generate}>
-              <Dices className="w-4 h-4 mr-2" />
-              Generate random names
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setRows((p) => [...p, randomRow()])}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add row
-            </Button>
+            <div className="flex flex-wrap gap-2 sm:ml-auto">
+              <Button onClick={generate}>
+                <Dices className="mr-2 h-4 w-4" />
+                Generate
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setRows((p) => [...p, randomRow()])}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add row
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Generated rows */}
+      {/* Rows */}
       {rows.length > 0 && (
-        <Card>
-          <CardContent className="p-4 sm:p-6 space-y-3">
-            {rows.map((r, idx) => (
-              <div
-                key={r.key}
-                className="grid gap-2 sm:grid-cols-[2rem_1fr_1fr_1fr_auto] items-center"
-              >
-                <span className="text-sm text-gray-500">{idx + 1}</span>
-                <input
-                  value={r.firstname}
-                  onChange={(e) =>
-                    updateRow(r.key, { firstname: e.target.value })
-                  }
-                  placeholder="First name"
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-                />
-                <input
-                  value={r.lastname}
-                  onChange={(e) =>
-                    updateRow(r.key, { lastname: e.target.value })
-                  }
-                  placeholder="Last name"
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-                />
-                <select
-                  value={r.template_slug}
-                  onChange={(e) =>
-                    updateRow(r.key, { template_slug: e.target.value })
-                  }
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        <Card className="min-w-0">
+          <CardContent className="space-y-3 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">
+                {rows.length} agent{rows.length > 1 ? "s" : ""} to register
+              </h2>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={rerollAll}>
+                  <Dices className="mr-1.5 h-3.5 w-3.5" />
+                  Reroll all
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => applyTemplateToAll(defaultSlug)}
                 >
-                  <option value="">Default template</option>
-                  {templates.map((t) => (
-                    <option key={t.slug} value={t.slug}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => rerollRow(r.key)}
-                    aria-label="Reroll name"
-                  >
-                    <Dices size={14} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => removeRow(r.key)}
-                    aria-label="Remove row"
-                  >
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
+                  Apply default to all
+                </Button>
               </div>
-            ))}
+            </div>
+
+            {/* Column headings (desktop only) */}
+            <div className="hidden grid-cols-[1.5rem_1fr_1fr_11rem_4.5rem] gap-2 px-1 text-xs text-gray-500 md:grid">
+              <span>#</span>
+              <span>First name</span>
+              <span>Last name</span>
+              <span>Template</span>
+              <span />
+            </div>
+
+            {/* Scrollable list so 200 rows never makes the page huge */}
+            <div className="max-h-[50vh] space-y-2 overflow-y-auto pr-1">
+              {rows.map((r, idx) => (
+                <div
+                  key={r.key}
+                  className="grid grid-cols-2 items-center gap-2 rounded-lg border border-gray-200 p-2.5 md:grid-cols-[1.5rem_1fr_1fr_11rem_4.5rem] md:rounded-md md:border-0 md:bg-gray-50 md:p-1.5"
+                >
+                  <span className="order-1 pl-1 text-xs text-gray-500">
+                    {idx + 1}
+                  </span>
+
+                  <div className="order-2 flex justify-end gap-1 md:order-5">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={() => rerollRow(r.key)}
+                      aria-label="Reroll name"
+                    >
+                      <Dices size={14} />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={() => removeRow(r.key)}
+                      aria-label="Remove row"
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+
+                  <div className="order-3 col-span-2 grid grid-cols-2 gap-2 md:contents">
+                    <input
+                      value={r.firstname}
+                      onChange={(e) =>
+                        updateRow(r.key, { firstname: e.target.value })
+                      }
+                      placeholder="First name"
+                      className={`${fieldClass} md:order-2`}
+                    />
+                    <input
+                      value={r.lastname}
+                      onChange={(e) =>
+                        updateRow(r.key, { lastname: e.target.value })
+                      }
+                      placeholder="Last name"
+                      className={`${fieldClass} md:order-3`}
+                    />
+                  </div>
+
+                  <select
+                    value={r.template_slug}
+                    onChange={(e) =>
+                      updateRow(r.key, { template_slug: e.target.value })
+                    }
+                    className={`${fieldClass} order-4 col-span-2 md:order-4 md:col-span-1`}
+                  >
+                    <option value="">Default</option>
+                    {templates.map((t) => (
+                      <option key={t.slug} value={t.slug}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
 
             <Button
               onClick={register}
               disabled={submitting}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full bg-emerald-600 text-white hover:bg-emerald-700"
             >
-              {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Register {rows.length} agent(s)
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Register {rows.length} agent{rows.length > 1 ? "s" : ""}
             </Button>
           </CardContent>
         </Card>
@@ -377,41 +424,53 @@ export default function AdminAgentsPage() {
 
       {/* Results */}
       {created.length > 0 && (
-        <Card>
-          <CardContent className="p-4 sm:p-6 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">
+        <Card className="min-w-0">
+          <CardContent className="space-y-3 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">
                 Created ({created.length})
               </h2>
-              <Button size="sm" variant="outline" onClick={downloadCsv}>
-                <Download className="w-4 h-4 mr-2" />
-                Download CSV
-              </Button>
-            </div>
-            {created.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center justify-between gap-2 rounded-md bg-gray-50 p-3"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {c.name}{" "}
-                    <span className="text-xs text-gray-500">
-                      [{c.template}]
-                    </span>
-                  </p>
-                  <p className="text-xs text-gray-600 break-all">{c.nfc_url}</p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => copy(c.nfc_url)}
-                  aria-label="Copy NFC link"
-                >
-                  <Copy size={14} />
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={copyAll}>
+                  <Copy className="mr-1.5 h-3.5 w-3.5" />
+                  Copy all links
+                </Button>
+                <Button size="sm" variant="outline" onClick={downloadCsv}>
+                  <Download className="mr-1.5 h-3.5 w-3.5" />
+                  CSV
                 </Button>
               </div>
-            ))}
+            </div>
+
+            <div className="max-h-[50vh] space-y-2 overflow-y-auto pr-1">
+              {created.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between gap-2 rounded-md bg-gray-50 p-2.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words text-sm font-medium">
+                      {c.name}{" "}
+                      <span className="text-xs font-normal text-gray-500">
+                        {c.template}
+                      </span>
+                    </p>
+                    <p className="break-all text-xs text-gray-600">
+                      {c.nfc_url}
+                    </p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => copy(c.nfc_url)}
+                    aria-label="Copy NFC link"
+                  >
+                    <Copy size={14} />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
