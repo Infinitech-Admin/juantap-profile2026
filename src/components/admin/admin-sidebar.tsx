@@ -26,8 +26,12 @@ interface AdminSidebarProps {
   setCollapsed: (collapsed: boolean) => void;
 }
 
-export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: AdminSidebarProps) {
-  
+export function AdminSidebar({
+  isOpen,
+  setIsOpen,
+  collapsed,
+  setCollapsed,
+}: AdminSidebarProps) {
   const [paymentCount, setPaymentCount] = useState<number>(0);
   const [user, setUser] = useState<any>(null);
   const [isProfileModalOpen, setProfileModalOpen] = useState(false);
@@ -45,6 +49,7 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
     },
     { name: "Templates", href: "/admin/templates", icon: FileText },
     { name: "Users", href: "/admin/users", icon: Users },
+    { name: "User Registration", href: "/admin/agents", icon: Users },
   ];
 
   const getProfileImageUrl = (path?: string) => {
@@ -52,7 +57,7 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
     if (path.startsWith("http")) return path;
     return `${process.env.NEXT_PUBLIC_IMAGE_URL}/storage/${path}`;
   };
- 
+
   const fetchUserData = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -93,8 +98,8 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
           },
-        }
-      ); 
+        },
+      );
 
       if (res.ok) {
         const data = await res.json();
@@ -120,7 +125,7 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
 
     setUser(null);
     router.replace("/login");
-  }; 
+  };
 
   return (
     <>
@@ -134,10 +139,10 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
 
       <div
         className={cn(
-          "fixed z-50 top-0 left-0 m-1 shadow-xl h-full bg-white border-r border-gray-200 transition-all duration-300 flex flex-col transition-all duration-300", 
+          "fixed z-50 top-0 left-0 m-1 shadow-xl h-full bg-white border-r border-gray-200 transition-all duration-300 flex flex-col transition-all duration-300",
           collapsed ? "w-16" : "w-64",
           isOpen ? "block" : "hidden",
-          "md:block"
+          "md:block",
         )}
       >
         {/* Header */}
@@ -145,13 +150,13 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
           <span className="font-semibold text-gray-700">
             {!collapsed && "Admin Panel"}
           </span>
-          <div className="flex items-center gap-2 mr-2 "> 
+          <div className="flex items-center gap-2 mr-2 ">
             {/* Collapse Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setCollapsed(!collapsed)}
-              className=" py-4 px-2" 
+              className=" py-4 px-2"
             >
               {collapsed ? (
                 <ChevronRight className="h-4 w-4" />
@@ -175,7 +180,7 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-2 overflow-y-auto"> 
+        <nav className="flex-1 py-4 px-2 overflow-y-auto">
           <ul className="space-y-2">
             {navigationItems.map((item) => {
               const isActive = pathname === item.href;
@@ -187,7 +192,7 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
                       "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                       isActive
                         ? "bg-blue-50 text-blue-700 border border-blue-200"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" 
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
                     )}
                     onClick={() => setIsOpen(false)} // close sidebar on mobile
                   >
@@ -217,7 +222,7 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
           >
             <Avatar className="h-8 w-8 mx-2">
               <AvatarImage src={getProfileImageUrl(user?.profile_image)} />
-              <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"> 
+              <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                 {user?.name
                   ? user.name
                       .split(" ")
@@ -229,7 +234,7 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.name || ""} 
+                  {user?.name || ""}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
                   {user?.email || ""}
@@ -238,7 +243,6 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
             )}
           </div>
 
- 
           <div className="mt-3">
             <Button
               variant="ghost"
@@ -247,7 +251,7 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
-              {!collapsed && "Logout"} 
+              {!collapsed && "Logout"}
             </Button>
           </div>
         </div>
@@ -262,4 +266,4 @@ export function AdminSidebar({ isOpen, setIsOpen, collapsed, setCollapsed }: Adm
       </div>
     </>
   );
-} 
+}
