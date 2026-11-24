@@ -60,6 +60,7 @@ import { MacetroArt } from "@/components/template-previews/macetro-art"; // NEW 
 import { BossAutoExchange } from "@/components/template-previews/boss-auto-exchange";
 import { CapitalJey } from "@/components/template-previews/capital-jey";
 import { AllCars } from "@/components/template-previews/all-cars";
+import { Swagat } from "@/components/template-previews/swagat";
 // Add more template imports as you create them
 
 export interface Template {
@@ -164,6 +165,7 @@ const TEMPLATE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "boss-auto-exchange": BossAutoExchange,
   "capital-jey": CapitalJey,
   "all-cars": AllCars,
+  swagat: Swagat,
   // Add more template mappings here as you create them
   // "sunset-gradient": SunsetGradient,
   // "professional-dark": ProfessionalDark,
